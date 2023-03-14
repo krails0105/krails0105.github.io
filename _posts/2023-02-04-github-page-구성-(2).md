@@ -1,5 +1,5 @@
 # Introduction
-![github pages](/assets/images/22-02-04-github-page/images.jpeg)
+![github pages](/assets/images/23-02-04-github-page/images.jpeg)
 
 이전 페이지에 이어서 github page 구성을 진행한다.
 
@@ -17,7 +17,7 @@ yml 파일을 이용하여 config 설정을 구성할 수 있으며 오픈소스
 
 기본 설치는 https://jekyllrb.com/docs/ 의 Quickstart 내용대로 진행할 수 있다.
 
-![](/assets/images/22-02-04-github-page(2)/github1.png)
+![](/assets/images/23-02-04-github-page(2)/github1.png)
 
 jekyll은 gem이기 때문에 Ruby와 RubyGems이 선행으로 설치되어야 한다. 물론 설치방법도 위 공식 홈페이지에 자세히 명시되어있다. 간단히 소개만 해보자면 아래의 순서로 설치가 이루어진다. (macOS 기준)
 
@@ -72,10 +72,10 @@ bundle exec jekyll serve
 ```
 아래와 같이 localhost:4000 주소로 사이트가 띄워졌다.
 
-![](/assets/images/22-02-04-github-page(2)/github3.png)
+![](/assets/images/23-02-04-github-page(2)/github3.png)
 
 
-![](/assets/images/22-02-04-github-page(2)/github4.png)
+![](/assets/images/23-02-04-github-page(2)/github4.png)
 
 # Conclusion
 이번에는 이전 index.html에 확장하여 jekyll을 이용한 페이지 생성을 하였다. 

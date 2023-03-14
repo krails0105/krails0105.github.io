@@ -1,10 +1,8 @@
 # Issue
-하나의 pc에서 git 계정을 2개 이상 사용하는 경우 각 계정의 ID/PW 인증을 통해 https 접속이 가능하지만 ssh 접속을 이용할 경우 각 계정별 key가 필요하다.
-만약 이미 github의 타 계정에 등록해 놓은 ssh key를 다른 계정에서도 등록을 시도하면 "Key is already in use"를 출력하며 등록이 실패한다.
+git PR을 요청받을 때, 너무 많은 commit으로 인해 변경점을 추적하기 어려울 때가 많았다.
+여러 commit을 하나로 합쳐 브랜치의 변경점을 보다 쉽게 추적하고 싶다.
 
 # Resolution
-간단하게 ssh 접속을 하고 싶은 계정을 위한 ssh key를 추가로 생성하고 해당 public 키를 계정에 등록하면 된다.
-이때 주의해야할 부분이 몇가지 있는데 추가로 알아보자.
 
 ## git rebase -i 
 
@@ -65,7 +63,90 @@ d4b73b68 feature: add 2
 $ git rebase -i HEAD~5
 ```
 
-![](../assets/images/23-03-13-git-key-duplicated/git-issue1.png)
+````shell
+```
+pick 3df3e3c7 feature: merge 1~5 commit
+s d4b73b68 feature: add 2
+s a24b8a9c feature: add 4
+s 0f33276d feature: add 3
+s 39f264ae feature: add 5
+
+# Rebase 18337c13..39f264ae onto 18337c13 (5 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like “squash” but keep only the previous
+#                    commit’s log message, unless -C is used, in which case
+#                    keep only this commit’s message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with ‘git rebase --continue’)
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+# .       create a merge commit using the original merge commit’s
+# .       message (or the oneline, if no original merge commit was
+# .       specified); use -c <commit> to reword the commit message
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+~                                                                  
+```
+
+```
+# This is a combination of 5 commits.
+# This is the 1st commit message:
+
+feature: add 1
+
+# This is the commit message #2:
+
+feature: add 2
+
+# This is the commit message #3:
+
+feature: add 4
+
+# This is the commit message #4:
+
+feature: add 3
+
+# This is the commit message #5:
+
+feature: add 5
+
+# Please enter the commit message for your changes. Lines starting
+# with ‘#’ will be ignored, and an empty message aborts the commit.
+#
+# Date:      Tue Mar 14 20:37:46 2023 +0900
+#
+# interactive rebase in progress; onto 18337c13
+# Last commands done (5 commands done):
+#    squash 0f33276d feature: add 3
+#    squash 39f264ae feature: add 5
+# No commands remaining.
+# You are currently rebasing.
+#
+# Changes to be committed:
+#       new file:   1
+#       new file:   2
+#       new file:   3
+#       new file:   4
+#       new file:   5
+#
+~                             
+```
+````
+
+
 
 
 
@@ -119,7 +200,6 @@ https://zeddios.tistory.com/1222
 https://leop0ld.tistory.com/17
 
 https://ideveloper2.tistory.com/80
-
 
 
 
