@@ -6,12 +6,63 @@
 간단하게 ssh 접속을 하고 싶은 계정을 위한 ssh key를 추가로 생성하고 해당 public 키를 계정에 등록하면 된다.
 이때 주의해야할 부분이 몇가지 있는데 추가로 알아보자.
 
-1. git config의 user 설정
+## git rebase -i 
 
-가령 이미 git config --global로 다른 계정의 user 설정이 되어있는 상태에서 아무 설정없이 원격 저장소에 git push를 하면 global user 정보로 push가 된다.
+과거 커밋내역들을 통합하는 명령어이다.
+
 ```
-git config --global user.name krails0522
-git config --global user.email shkim@gmail.com
+git rebase -i HEAD~~
+```
+
+테스트를 위해 작업 중인 브랜치에 아래와 같이 5개의 file을 만든다
+
+```shell
+$ touch 1
+$ touch 2
+$ touch 3
+$ touch 4
+$ touch 5
+$ git status
+...
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        1
+        2
+        3
+        4
+        5
+```
+
+5개의 commit을 만들기 위해 각 파일을 add할 때마다 commit을 만든다
+
+```shell
+$ git add 1
+$ git commit -m "feature: add 1"
+$ git add 2
+$ git commit -m "feature: add 2"
+$ git add 3
+$ git commit -m "feature: add 3"
+$ git add 4
+$ git commit -m "feature: add 4"
+$ git add 5
+$ git commit -m "feature: add 5"
+```
+
+아래와 같이 5개의 커밋이 만들어 짐을 확인할 수 있다
+
+```shell
+$ git log --oneline
+39f264ae (HEAD -> test/test) feature: add 5
+a24b8a9c feature: add 4
+0f33276d feature: add 3
+d4b73b68 feature: add 2
+3df3e3c7 feature: add 1
+```
+
+이제 이 커밋들을 하나로 합치기 위해 git 명령어를 사용하자
+
+```shell
+$ git rebase -i HEAD~5
 ```
 
 ![](../assets/images/23-03-13-git-key-duplicated/git-issue1.png)
