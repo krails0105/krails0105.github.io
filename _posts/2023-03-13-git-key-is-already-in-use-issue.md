@@ -1,3 +1,8 @@
+---
+layout: post
+title:  Git "Key is already in use" issue
+---
+
 # Issue
 하나의 pc에서 git 계정을 2개 이상 사용하는 경우 각 계정의 ID/PW 인증을 통해 https 접속이 가능하지만 ssh 접속을 이용할 경우 각 계정별 key가 필요하다.
 
