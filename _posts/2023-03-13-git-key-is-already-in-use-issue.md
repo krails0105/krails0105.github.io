@@ -1,5 +1,4 @@
 ---
-layout: post
 title:  Git "Key is already in use" issue
 ---
 
