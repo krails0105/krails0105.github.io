@@ -1,4 +1,7 @@
 # Issue
+
+---
+
 git merge중에 아래와 같은 에러가 나면서 merge가 실패하는 경우가 있었다.
 
 *fatal: refusing to merge unrelated histories*
@@ -11,6 +14,8 @@ git merge중에 아래와 같은 에러가 나면서 merge가 실패하는 경�
 
 # Resolution
 
+---
+
 해결 방법은 간단한데 명령어에 --allow-unrelated-histories를 추가하면 된다.
 ```
 git merge master --allow-unrelated-histories
@@ -21,6 +26,8 @@ git merge master --allow-unrelated-histories
 머지 후에 생긴 conflict 코드를 수정하고 성공적으로 push를 하였다.
 
 # Reference
+
+---
 
 https://gdtbgl93.tistory.com/63
 

@@ -3,11 +3,17 @@ title:  Git "Key is already in use" issue
 ---
 
 # Issue
+
+---
+
 하나의 pc에서 git 계정을 2개 이상 사용하는 경우 각 계정의 ID/PW 인증을 통해 https 접속이 가능하지만 ssh 접속을 이용할 경우 각 계정별 key가 필요하다.
 
 만약 이미 github의 타 계정에 등록해 놓은 ssh key를 다른 계정에서도 등록을 시도하면 "Key is already in use"를 출력하며 등록이 실패한다.
 
 # Resolution
+
+---
+
 해결하기 위해서는 ssh 접속을 하고 싶은 계정을 위한 ssh key를 추가로 생성하고 해당 public 키를 계정에 등록하면 된다.
 ```
 $ ssh-keygen
@@ -105,16 +111,17 @@ $ git remote remove origin
 $ git remote add origin git@github.com-krailskim:krails0105/krails0105.github.io.git
 ```
 
-
-
-
 # Conclusion
+
+---
+
 하나의 PC에서 여러개의 ssh 키를 생성하여 2개 이상의 git 걔정을 관리하는 방법을 알아보았다.
 
 평소에는 git 걔정을 하나만 사용하기 때문에 잘 발생하지 않는 에러였는데 추후에 회사 계정과 개인 계정을 동시에 관리해야 할 때 유용할 듯 하다.
 
-
 # Reference
+
+---
 
 https://kibua20.tistory.com/190
 

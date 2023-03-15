@@ -1,8 +1,13 @@
 # Issue
+
+---
+
 git PR을 요청받을 때, 너무 많은 commit으로 인해 변경점을 추적하기 어려울 때가 많았다.
 여러 commit을 하나로 합쳐 브랜치의 변경점을 보다 쉽게 추적하고 싶다.
 
 # Resolution
+
+---
 
 ## git rebase -i 
 
@@ -226,12 +231,16 @@ $ git push
 ```
 
 # Conclusion
+
+---
+
 git rebase로 commit을 통합하는 법에 대해서 알아보았다.
 
 git rebase -i에는 커밋 통합 외에 커밋 수정 등 다른 기능들이 있는 것 같아 보이니 추후 더 알아볼 필요가 있어보인다.
 
-
 # Reference
+
+---
 
 https://backlog.com/git-tutorial/kr/stepup/stepup7_5.html
 

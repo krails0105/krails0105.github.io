@@ -1,4 +1,7 @@
 # Introduction
+
+---
+
 ![github pages](/assets/images/23-02-04-github-page/images.jpeg)
 
 개발 블로그를 구성해보기 위해 여러 서비스 중 github page를 채택하게 되었다. 
@@ -9,6 +12,9 @@ github page는 git에서 운영하는 서비스인 만큼 git에 대해 더 익�
 > index.html을 이용한 간단한 github page 생성
 
 # github page 구성
+
+---
+
 ### 1. 페이지 구성에 사용될 git repository를 만든다
 아래 new 버튼 클릭
 ![](/assets/images/23-02-04-github-page/repo.png)
@@ -40,21 +46,24 @@ repo 이름은 반드시 {username}.github.io과 동일하게 설정한다.
 ![](/assets/images/23-02-04-github-page/repo9.png)
 
 # Conclusion
+
+---
+
 이번에는 간단한 repo 생성과 html파일 생성으로 github page를 구성해보았다.
 
 기존에 github을 사용하던 개발자들에게는 간단하지만 사실 개발자들이 아닌 일반사람들이 사용하기에는 이부분부터가 부담일 수 있다고 생각.. 
 
 다음에는 간단한 페이지를 좀 더 확장하여 jekyll이라는 site generator를 이용한 페이지 구성을 해보겠다.
 
-
 # Reference
+
+---
 
 https://docs.github.com/en/pages/quickstart
 
 https://zeddios.tistory.com/1222
 
 https://www.youtube.com/watch?v=ACzFIAOsfpM
-
 
 
 
