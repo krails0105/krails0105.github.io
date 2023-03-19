@@ -304,7 +304,7 @@ public class TwoDimension {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		int[][] arr = {{1,2,3}, {4,5,6}};
+		int[][] arr = { {1,2,3}, {4,5,6} };
 		
 		System.out.println(arr.length);
 		System.out.println(arr[0].length);
