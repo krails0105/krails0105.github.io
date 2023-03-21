@@ -29,7 +29,7 @@ Java의 배열에 대하여 알아본다.
 
 3. 인덱스 접근 (ex. arr[0]) 속도가 빠르다
 
-![image-20230319210003123](../assets/images/03-19-array/1.png)
+![image-20230319210003123](../../assets/images/03-19-array/1.png)
 
 ```java
 public class ArrayTest {
@@ -89,7 +89,7 @@ Book library[] = new Book[5];
 
 -  위 상태는 Book 클래스의 배열이 생성되었을 뿐, 아직 library의 각 원소들이 인스턴스로 만들어지지는 않는다. (library의 각 원소들은 null을 참조하고 있다)
 
-![image-20230319211048339](../assets/images/03-19-array/2.png)
+![image-20230319211048339](../../assets/images/03-19-array/2.png)
 
 - 각 인덱스마다 객체를 생성하려면 ***library[0~4] = new Book();*** 으로 각각의 인스턴스들을 만들어줘야한다.
 
@@ -131,7 +131,7 @@ array.Book@6b884d57
 
 배열의 복사하는 기능의 시스템 메서드
 
-*![](../assets/images/03-19-array/3.png)*
+*![](../../assets/images/03-19-array/3.png)*
 
 ```java
 public class ObjectCopy {
@@ -294,7 +294,7 @@ Mount5,Jo
 
 2차원 이상의 배열로 좌표 등을 나타낼 때 유용하다.
 
-![image-20230319212045747](../assets/images/03-19-array/4.png)
+![image-20230319212045747](../../assets/images/03-19-array/4.png)
 
 ```java
 package array;

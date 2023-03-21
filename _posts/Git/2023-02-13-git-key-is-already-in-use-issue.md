@@ -20,7 +20,7 @@ $ ssh-keygen
 ```
 ssh-keygen 명령어 수행 후 기존 키와의 중복 방지를 위해 *Enter file in which to save the key* 단계에서 아래와 같이 key파일의 이름을 바꾸거나 경로를 바꿔서 저장한다.
 
-![](../assets/images/23-03-13-git-key-duplicated/git-issue4.png)
+![](..../../assets/images/23-03-13-git-key-duplicated/git-issue4.png)
 
 key를 생성하면 아래와 같이 private, public 키가 각각 생성되는데 이 중 public key를 사용하고자 하는 계정에 등록해주면 된다.
 ```
@@ -30,7 +30,7 @@ $ ls  ~/.ssh/id_rsa_krails0105*
 
 github 페이지에서 Settings -> SSH and GPG keys -> New SSH Key 
 
-![](../assets/images/23-03-13-git-key-duplicated/git-issue5.png)
+![](..../../assets/images/23-03-13-git-key-duplicated/git-issue5.png)
 
 위 단계에서 New SSH Key를 누르면 아래와 같이 public key를 등록하는 페이지가 나오는데  Key블록에 .pub 확장자를 가진 key의 내용을 그대로 옮겨주고 Add SSH Key를 누르면 등록이 성공한다. 
 
@@ -39,7 +39,7 @@ github 페이지에서 Settings -> SSH and GPG keys -> New SSH Key
 $ cat /Users/shkim/.ssh/id_rsa_krails0105.pub
 ```
 
-![](../assets/images/23-03-13-git-key-duplicated/git-issue6.png)
+![](..../../assets/images/23-03-13-git-key-duplicated/git-issue6.png)
 
 ----
 
@@ -57,7 +57,7 @@ git config --global user.name krails0522
 git config --global user.email shkim@gmail.com
 ```
 
-![](../assets/images/23-03-13-git-key-duplicated/git-issue1.png)
+![](..../../assets/images/23-03-13-git-key-duplicated/git-issue1.png)
 
 
 
@@ -72,7 +72,7 @@ git config --local user.email krails.kim@gmail.com
 
 아래와 같이 git clone에서 URL은 git@github.com:{your_id}/{repo_name}.git 형식으로 설정이 되어있다.
 
-<img src="../assets/images/23-03-13-git-key-duplicated/git-issue3.png" height="180px" width="600px">
+<img src="..../../assets/images/23-03-13-git-key-duplicated/git-issue3.png" height="180px" width="600px">
 
 이때 위 URL 그대로 clone을 하면 최초로 설정된 ssh key와 연동되는 repo가 생성된다.
 

@@ -77,7 +77,7 @@ public class ClassTest {
 
 - 위 코드에서 사용한 프로젝트, 패키지 구조는 아래와 같다.
 
-*![1](../assets/images/23-03-21-class-class/1.png)*
+*![1](../../assets/images/23-03-21-class-class/1.png)*
 
 
 
@@ -232,7 +232,7 @@ public final native void java.lang.Object.notifyAll()
 - 리턴 타입은 Object
 - Java9 이후로 deprecated
 
-![2](../assets/images/23-03-21-class-class/2.png)
+![2](../../assets/images/23-03-21-class-class/2.png)
 
 ```java
 package classex;

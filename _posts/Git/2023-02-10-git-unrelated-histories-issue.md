@@ -6,7 +6,7 @@ git merge중에 아래와 같은 에러가 나면서 merge가 실패하는 경�
 
 *fatal: refusing to merge unrelated histories*
 
-![github pages](/assets/images/23-02-04-git-issue/git2.png)
+![github pages](../../assets/images/23-02-04-git-issue/git2.png)
 
 나의 경우에는 main브랜치를 만들어 놓고 실수로 master브랜치를 만들고 main과는 아예 다른 내용으로 작업을 진행하였는데 해당 에러가 발생하였다.
 
@@ -21,7 +21,7 @@ git merge중에 아래와 같은 에러가 나면서 merge가 실패하는 경�
 git merge master --allow-unrelated-histories
 ```
 
-![github pages](/assets/images/23-02-04-git-issue/git1.png)
+![github pages](../../assets/images/23-02-04-git-issue/git1.png)
 
 머지 후에 생긴 conflict 코드를 수정하고 성공적으로 push를 하였다.
 
