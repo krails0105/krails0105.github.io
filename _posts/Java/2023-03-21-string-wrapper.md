@@ -138,6 +138,8 @@ public class StringBuilderTest {
 
 기본 자료형들을 클래스화한 클래스
 
+클래스화 하였기 때문에 해당 클래스로 만든 변수들은 기본 자료형이 아닌 ***참조 자료형***이 된다.
+
 | 기본 자료형 | Wrapper class |
 | ----------- | ------------- |
 | boolean     | Boolean       |
