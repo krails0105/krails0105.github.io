@@ -1,5 +1,9 @@
 ---
-title: Java Array
+title: "[Java] Array"
+categories:
+  - Java
+tags:
+  - [Java]
 
 ---
 
@@ -9,7 +13,7 @@ title: Java Array
 
 ---
 
-Java의 배열에 대하여 알아본다.
+Java의 배열(Array)에 대하여 알아본다.
 
 
 

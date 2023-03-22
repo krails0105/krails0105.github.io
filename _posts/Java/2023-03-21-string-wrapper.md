@@ -1,5 +1,9 @@
 ---
-title: Java String 클래스 / Wrapper클래스
+title: "[Java] String 클래스 / Wrapper클래스"
+categories:
+  - Java
+tags:
+  - [Java]
 
 ---
 

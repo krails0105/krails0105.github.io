@@ -1,5 +1,9 @@
 ---
-title: Java Class 클래스
+title: "[Java] Class 클래스"
+categories:
+  - Java
+tags:
+  - [Java]
 
 ---
 
