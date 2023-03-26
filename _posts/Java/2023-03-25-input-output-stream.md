@@ -487,9 +487,839 @@ public class FileInputTest2 {
 
 
 
+아래 예제는 input2.txt를 10바이트씩 byte배열에 입력을 받으면서 입력받은 배열을 출력해주는 예제이다.
+
+- `배열을 인자로 넣은 read()`는 인자로 보내준 배열의 크기만큼 파일을 읽어 들인다.
+
+- `인자를 넣지 않은 read()`는 한 바이트 씩 파일을 읽어 들인다.
+
+- `배열을 인자로 넣은 read()`의 리턴으로는 읽어들인 바이트의 크기가 반환 된다.
+
+- `인자를 넣지 않은 read()`의 리턴으로는 읽어들인 바이트의 값이 반환 된다.
+
+```
+// input2 .txt
+ABCDEFGHIJKLMNOP
+```
+
+```java
+package stream.inputstream;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public class FileInputTest3 {
+
+	public static void main(String[] args) {
+		
+		
+		try (FileInputStream fis = new FileInputStream("input2.txt")){
+			
+			int i;
+			byte[] bs = new byte[10];
+			
+			while ((i = fis.read(bs)) != -1) { // 인자로 보내준 배열 bs의 크기만큼 파일을 읽어들인다
+				for (byte b : bs) {
+					System.out.print((char)b);
+				}
+				System.out.println();
+			}
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+	}
+}
+
+----------
+
+ABCDEFGHIJ
+KLMNOPQRST
+UVWXYZQRST // UVWXYZ 뒤에 QRST garbage값이 출력됨
+```
+
+- 위 예시 결과를 보면 3번째 줄의 QRST는 2번째 loop를 돌때 array에 남아있던 garbage값이 출력됨
+
+  - 배열에 입력을 받은 뒤 10바이트씩 고정으로 출력을 해주고 있기 때문에 마지막 'UVWXYZ' 6바이트의 입력이 들어왔어도 10바이트 출력을 시도 
+  - input2.txt의 2번째 줄을 처리할 때 남아있던 array의 값들이 출력되는 문제 발생
+
+  
+
+```java
+package stream.inputstream;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public class FileInputTest3 {
+
+	public static void main(String[] args) {
+		
+		
+		try (FileInputStream fis = new FileInputStream("input2.txt")){
+			
+			int i;
+			byte[] bs = new byte[10];
+			
+			while ((i = fis.read(bs)) != -1) { 
+//				for (byte b : bs) {
+//					System.out.print((char)b);
+//				}
+//				System.out.println();
+				
+				for (int k=0; k<i; k++) {
+					System.out.print((char)bs[k]);
+				}
+				System.out.println();
+			}
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}
+}
+
+----------
+
+ABCDEFGHIJ
+KLMNOPQRST
+UVWXYZ
+```
+
+- 배열을 인자로 받은 read()의 반환 값에는 읽어들인 바이트 수가 리턴되기 때문에 리턴 값을 이용하여 파일 내용을 정확한 범위까지 출력할 수 있다.
 
 
 
+아래는 파일 출력 스트림의 예시이다.
+
+`FileOutputStream(filename, option);`
+
+- option의 디폴트는 false인데 true로 설정하면 write할때마다 append가된다
+
+```java
+package stream.outputstream;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class FileOutputTest1 {
+
+	public static void main(String[] args) {
+		
+		try(FileOutputStream fos = new FileOutputStream("output.txt", true)){
+			
+			fos.write(65);
+			fos.write(66);
+			fos.write(67);
+			
+		}catch(IOException e) {
+			System.out.println(e);
+		}
+
+	}
+
+}
+```
+
+
+
+FileInputStream, FileOutputStream을 동시에 사용하면 파일에서 읽어들인 데이터를 다른 파일로 출력할 수 있다.
+
+```java
+package stream.outputstream;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class FileOutputTest1 {
+
+	public static void main(String[] args) {
+		
+		byte[] bs = new byte[26];
+		byte data = 65;
+		for(int i=0; i<bs.length; i++) {
+			bs[i] = data;
+			data++;
+		}
+		
+		try(FileOutputStream fos = new FileOutputStream("alpha.txt");
+				FileInputStream fis = new FileInputStream("alpha2.txt")){
+			
+			fos.write(bs);
+			int ch;
+			while ( (ch = fis.read()) != -1) {
+				System.out.print((char)ch);
+			}
+					
+		}catch(IOException e) {
+			System.out.println(e);
+		}
+
+	}
+
+}
+```
+
+
+
+## 문자 단위 입출력 스트림
+
+---
+
+`Reader`: 문자 단위 입력 스트림의 최상위 클래스 
+
+`Writer`: 문자 단위 출력 스트림의 최상위 클래스 
+
+
+
+- Reader의 하위 클래스
+
+![image-20230326155738613](../../assets/images/03-25-io-stream/9.png)
+
+
+
+- Writer의 하위 클래스
+
+![image-20230326155819577](../../assets/images/03-25-io-stream/10.png)
+
+
+
+### FileReader/FileWriter
+
+파일에서 문자를 읽고 쓸때 주로 사용하는 클래스, 문자의 인코딩 방식을 지정하는 것도 가능
+
+
+
+1) FileReader 방식 파일 입력
+
+```
+// reader.txt
+가나다라abc
+```
+
+```java
+package stream.reader;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class FileReaderTest {
+
+	public static void main(String[] args) throws IOException {
+		
+//		FileInputStream fis = new FileInputStream("reader.txt");
+//		InputStreamReader isr = new InputStreamReader(fis); 
+		FileReader fis = new FileReader("reader.txt");
+		
+		int i;
+		while( (i = fis.read()) != -1 ) {
+			System.out.print((char)i);
+		}
+		
+		fis.close();
+	}
+}
+
+---------
+
+가나다라abc
+```
+
+
+
+2. FileWriter 방식 파일 출력
+
+````java
+package stream.writer;
+
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class FileWriterTest {
+
+	public static void main(String[] args) throws IOException {
+		
+		FileWriter fw = new FileWriter("writer.txt");
+		fw.write("A");
+		
+		char[] buf = {'B','C','D','E','F'};
+		fw.write(buf);
+		fw.write("안녕하세요");
+		fw.write(buf, 2, 2);
+		fw.close();
+		
+		System.out.println("end");
+	}
+
+}
+````
+
+```
+// writer.txt
+ABCDEF안녕하세요DE
+```
+
+
+
+### InputStreamReader
+
+바이트 단위로 읽은 데이터를 문자로 변환해 주는 보조 스트림 클래스
+
+바이트 단위로 데이터를 입력해주는 `FileInputStream` 클래스를 이용하여 문자를 읽어들이면 ***2바이트 이상의 문자를 읽을 때 invalid한 결과*** 값이 나오게 되는데 이때 `InputStreamReader` 보조 클래스를 사용하면 정확한 문자를 읽을 수 있다.
+
+
+
+1) FileInputStream를 사용하여 한글 문자를 읽는 경우
+
+```
+// reader.txt
+가나다라abc
+```
+
+```java
+package stream.reader;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class FileReaderTest {
+
+	public static void main(String[] args) throws IOException {
+		
+		FileInputStream fis = new FileInputStream("reader.txt");
+//		InputStreamReader isr = new InputStreamReader(fis); 
+//		FileReader fis = new FileReader("reader.txt");
+		
+		int i;
+		while( (i = fis.read()) != -1 ) {
+			System.out.print((char)i);
+		}
+		
+		fis.close();
+	}
+}
+
+----------
+
+ê°ëë¤ë¼abc // Invalid한 데이터가 입력됨
+```
+
+- FileInputStream은 바이트 단위로 읽기 때문에 한글 문자는 제대로 인식 못함
+
+
+
+2. InputStreamReader를 이용한 경우
+
+```java
+package stream.reader;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class FileReaderTest {
+
+	public static void main(String[] args) throws IOException {
+		
+		FileInputStream fis = new FileInputStream("reader.txt");
+		InputStreamReader isr = new InputStreamReader(fis); // FileInputStream를 보조하여 바이트 단위 데이터를 문자로 변환
+//		FileReader fis = new FileReader("reader.txt");
+		
+		int i;
+		while( (i = isr.read()) != -1 ) {
+			System.out.print((char)i);
+		}
+		
+		isr.close(); // 보조 스트림을 close하면 메인 스트림인 FileInputStream도 close됨
+	}
+}
+
+---------
+
+가나다라abc // Correct result
+```
+
+- InputStreamReader로 바이트 단위로 읽은 자료를 문자로 변환 가능
+
+
+
+## 보조 스트림
+
+실제 읽고 쓰는 스트림이 아닌 다른 스트림의 기능을 추가해주는(보조하는) 역할을 하는 스트림
+
+*![image-20230326162511485](../../assets/images/03-25-io-stream/12.png)*
+
+
+
+FilterInputStream, FilterOutputStream이 보조 스트림의 상위 클래스에 해당
+
+*![image-20230326162456056](../../assets/images/03-25-io-stream/11.png)*
+
+
+
+보조 스트림의 예시로는 BufferedInputStream/BufferedOutputStream, DataInputStream/DataOutputStream 등이 있다.
+
+- `BufferedInputStream`/`BufferedOutputStream`: 내부에 8192 바이트의 버퍼를 가지고 있어 읽고 쓰는 속도가 빠름
+- `DataInputStream`/`DataOutputStream`: 데이터의 자료형을 그대로 유지하며 읽고 쓰는 것이 가능
+
+![13](../../assets/images/03-25-io-stream/13.png)
+
+
+
+### BufferedInputStream/BufferedOutputStream
+
+아래 예시는 버퍼 보조 스트림을 이용하기 전과 후의 Read/Write 속도를 비교한 코드이다.
+
+1. 버퍼 스트림을 이용하기 전
+
+````java
+package stream.decorator;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class FileCopy {
+
+	public static void main(String[] args) {
+		
+		long miliseconds = 0;
+		
+		try(FileInputStream fis = new FileInputStream("a.zip");
+				FileOutputStream fos = new FileOutputStream("copy.zip")){
+			
+			miliseconds = System.currentTimeMillis();
+			
+			int i;
+			while ( (i = fis.read()) != -1) {
+				fos.write(i);
+			}
+      
+			miliseconds = System.currentTimeMillis() - miliseconds;
+      
+		}catch(IOException e) {
+			System.out.println(e);
+		}
+		
+		System.out.println("시간: " + miliseconds);
+
+	}
+}
+
+--------
+
+시간: 2287
+````
+
+
+
+2. 버퍼 스트림을 이용 
+
+````java
+package stream.decorator;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class FileCopy {
+
+	public static void main(String[] args) {
+		
+		long miliseconds = 0;
+		
+		try(FileInputStream fis = new FileInputStream("a.zip");
+				FileOutputStream fos = new FileOutputStream("copy.zip");
+				BufferedInputStream bis = new BufferedInputStream(fis); 	 // 버퍼 스트림
+				BufferedOutputStream bos = new BufferedOutputStream(fos)){ // 버퍼 스트림
+			
+			miliseconds = System.currentTimeMillis();
+			
+			int i;
+			while ( (i = bis.read()) != -1) {
+				bos.write(i);
+			}
+			
+			miliseconds = System.currentTimeMillis() - miliseconds;
+			
+			
+		}catch(IOException e) {
+			System.out.println(e);
+		}
+		
+		System.out.println("시간: " + miliseconds);
+
+	}
+}
+
+--------
+
+시간: 17
+````
+
+- ***R/W 시간이 2287 -> 17 로 획기적으로 빨라진 것을 확인***
+
+
+
+보조 스트림은 `데코레이터` 패턴으로 구현되어 ***여러번 사용하여 다른 스트림의 기능을 계속 추가해 나갈 수 있음***
+
+`InputStreamReader` : byte단위로 읽는 것을 문자단위로 읽을 수 있게 변경 
+
+`BufferedReader` : 버퍼링기능  
+
+`readLine` : \n 이나 \r 단위로 문자를 읽어들임
+
+```java
+package stream.decorator;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class FileCopy {
+
+	public static void main(String[] args) throws IOException {
+		Socket socket = new Socket();
+		BufferedReader isr = new BufferedReader( new InputStreamReader(socket.getInputStream()));
+		isr.readLine();
+	}
+}
+```
+
+
+
+### DataInputStream/DataOutputStream
+
+`DataStream` : 데이터가 저장된 ***자료형을 유지***하면서 읽거나 쓰는 기능으로 ***데이터가 쓰여진 순서를 유지하면서 읽어야 함*** (위의 예에선 byte, int, char, utf), 순서가 달라지면 데이터가 깨질 수 있음
+
+- `writeByte` : 1바이트 단위로 write
+- `writeChar` : 문자 단위 
+- `writeUTF` : string 단위
+
+```java
+package stream.decorator;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class DataStreamTest {
+
+	public static void main(String[] args) {
+		
+		try(FileOutputStream fos = new FileOutputStream("data.txt");
+				DataOutputStream dos = new DataOutputStream(fos);
+				FileInputStream fis = new FileInputStream("data.txt");
+				DataInputStream dis = new DataInputStream(fis)){
+			
+      // byte -> int -> char -> utf 순으로 write
+			dos.writeByte(100);
+			dos.write(100);
+			dos.writeChar('A');
+			dos.writeUTF("안녕하세요");
+			
+      // byte -> int -> char -> utf 순으로 read
+			System.out.println(dis.readByte());
+			System.out.println(dis.read());
+			System.out.println(dis.readChar());
+			System.out.println(dis.readUTF());
+			
+		}catch(IOException e) {
+			
+		}
+
+	}
+
+}
+```
+
+
+
+## 직렬화 (Serialization)
+
+---
+
+객체 직렬화란 ***객체의 내용을 바이트 단위로 변환하여 파일 또는 네트워크를 통해서 송수신(스트림)이 가능하게 만들어 주는 것***
+
+- 이때, 객체 ***직렬화의 대상은 멤버 변수***만으로 구성
+- 즉, 멤버 변수를 제외한 ***메서드와 생성자는 직렬화에서 제외된다.***
+
+ObjectInputStream, ObjectOutputStream 보조 스트림이 사용된다.
+
+### 
+
+### Serializable 인터페이스
+
+객체의 직렬화 가능 여부를 명시하기 위한 인터페이스, 구현 코드가 없는 Marker Interface
+
+> Marker Interface: 아무 메서드도 담고 있지 않고 단지 자신을 구현하는 클래스가 **특정 속성**을 가짐을 표시해주는 인터페이스를 말한다.
+
+```java
+package stream.serialization;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+class Person implements Serializable{ // Serializable 마커 인터페이스를 구현함으로써 직렬화가 가능한 클래스 임을 명시
+	String name;
+	String job;
+	// transient String job; // transient → 이 객체는 직렬화하지 말라는 의미
+	
+	public Person(String name, String job) {
+		this.name = name;
+		this.job = job;
+		
+	}
+	
+	public String toString() {
+		return name + ", " + job;
+	}
+}
+
+public class SerializationTest {
+
+	public static void main(String[] args) {
+		
+		Person personLee = new Person("Lee", "Engineer");
+		Person personKim = new Person("Kim", "Teacher");
+
+		
+		try(FileOutputStream fos = new FileOutputStream("serial.dat");
+				ObjectOutputStream oos = new ObjectOutputStream(fos)){
+			
+			oos.writeObject(personLee);  // 직렬화한 객체 출력
+			oos.writeObject(personKim);	 // 직렬화한 객체 출력
+			
+		}catch(IOException e) {
+			System.out.println(e);
+		}
+		
+		try ( FileInputStream fis = new FileInputStream("serial.dat");
+				ObjectInputStream ois = new ObjectInputStream(fis)){
+			
+			Person p1 = (Person)ois.readObject();	 // 직렬화된 객체 입력
+			Person p2 = (Person)ois.readObject();	 // 직렬화된 객체 입력
+			
+			System.out.println(p1);
+			System.out.println(p2);
+			
+		}catch(IOException e) {
+			System.out.println(e);
+		} catch (ClassNotFoundException e) {
+			System.out.println(e);
+		}
+				
+	}
+}
+
+---------
+
+// String job; 의 경우
+Lee, Engineer
+Kim, Teacher
+
+
+// transient String job; 의 경우
+Lee, null
+Kim, null
+```
+
+```
+// serial.dat
+��srstream.serialization.Persond�t�>RcLjobtLjava/lang/String;Lnameq~xptEngineertLeesq~tTeachertKim
+```
+
+
+
+### Externalizable
+
+직렬화를 위해 직접 구현해야 하는 메소드가 있는 인터페이스, Marker Interface가 아니다
+
+`writeExternal`, `readExternal`: 객체 직렬화를 위해 writeObject, readObject이 호출 될 때, 해당 메서드들이 호출되어서 object를 읽고 쓰는 것을 직접 구현 가능
+
+```java
+class Person implements Externalizable{
+	String name;
+	transient String job;
+	
+	public Person(String name, String job) {
+		this.name = name;
+		this.job = job;
+		
+	}
+	
+	public String toString() {
+		return name + ", " + job;
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		// TODO Auto-generated method stub
+		
+	}
+}
+```
+
+
+
+## 기타 입출력 클래스
+
+---
+
+### File 클래스
+
+파일 개념을 추상화한 클래스, 입출력 기능은 없고 파일의 속성, 경로, 이름등을 알 수 있음
+
+### RandomAccessFile 클래스
+
+입출력 클래스 중 유일하게 객체 하나로 파일 입출력이 동시 가능한 클래스
+
+파일 포인터가 있어 읽고 쓰는 위치 이동(`seek()` 메서드 사용)이 가능, 다양한 자료형에 대한 메서드 제공
+
+```java
+package stream.others;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+
+public class RandomAccessFileTest {
+
+	public static void main(String[] args) throws IOException {
+		
+		RandomAccessFile rf = new RandomAccessFile("random.txt", "rw");
+		rf.writeInt(100);
+		System.out.println(rf.getFilePointer());
+		rf.writeDouble(3.14);
+		rf.writeUTF("안녕");
+		
+		rf.seek(0);						// 파일의 첫 번째 위치로 이동
+		int i = rf.readInt();
+		double d = rf.readDouble();
+		String str = rf.readUTF();
+		
+		System.out.println(i);
+		System.out.println(d);
+		System.out.println(str);
+		
+		rf.close();
+
+	}
+}
+
+----------
+
+4
+100
+3.14
+안녕
+```
+
+- ***RandomAccessFile는 write나 read를 할때마다 파일 포인터가 달라지기 때문에 write 후에 rf.seek(0); 을 하지 않으면 정상적인 read가 불가능***
+
+
+
+# 데코레이터 패턴
+
+---
+
+위에서 몇번 언급된 데코레이터 패턴에 대하여 간략히 알아보자.
+
+객체의 결합을 통해 ***기본적인 객체(Component)에 추가하고 싶은 기능(Decorater)을 유연하게 확장*** 할 수 있게 해주는 패턴
+
+![image-20230326171358651](../../assets/images/03-25-io-stream/14.png)
+
+`Component`
+
+- 기본 기능을 뜻하는 ConcreteComponent와 추가 기능을 뜻하는 Decorator의 공통 기능을 정의
+- 즉, 클라이언트는 Component를 통해 실제 객체를 사용함
+
+`ConcreteComponent`
+
+- Component의 기본 기능을 구현하는 클래스
+
+`Decorator`
+
+- 여러 Decorator의 공통 기능을 제공
+
+`ConcreteDecoratorA`, `ConcreteDecoratorB`
+
+- Decorator의 하위 클래스로 기본 기능에 추가되는 개별적인 기능을 뜻함
+- ConcreteDecorator 클래스는 ConcreteComponent 객체에 대한 참조가 필요한데, 이는 Decorator 클래스에서 Component 클래스로의 ***합성(composition) 관계***를 통해 표현됨
+- 컴포넌트의 기본 기능(위 예시의 Operation 메서드)을 수행한 뒤에 추가 기능(AddedBehavior() 메서드)을 수행하여 컴포넌트를 보조한다.
+
+[^]: 출처: https://gmlwjd9405.github.io/2018/07/09/decorator-pattern.html
+
+
+
+Java의 입출력 클래스를 예로 들면 아래와 같다.
+
+- Component: 기반 스트림
+- Decorator: 보조 스트림
+
+Decorator의 입장에서 컴포넌트의 입출력 기능을 보조해주기 위해서
+
+1. 컴포넌트를 참조하고 있어야(합성 관계) 한다.
+2. 컴포넌트의 기능을 우선적으로 호출하고 보조 기능을 호출하여 컴포넌트의 기능을 보조한다.
+
+가령 아래 DataInputStream 보조 클래스를 보면 InputStream(컴포넌트)를 보조해주고 있는데 readChar() 메서드를 보면 컴포넌트의 메서드를 먼저 호출한 뒤에 보조 기능을 추가한 것을 알 수 있다.
+
+```java
+public class DataInputStream extends FilterInputStream implements DataInput {
+
+    /**
+     * Creates a DataInputStream that uses the specified
+     * underlying InputStream.
+     *
+     * @param  in   the specified input stream
+     */
+    public DataInputStream(InputStream in) {
+        super(in);
+    }
+		...
+      
+    public final char readChar() throws IOException {
+        int ch1 = in.read();
+        int ch2 = in.read();
+        if ((ch1 | ch2) < 0)
+            throw new EOFException();
+        return (char)((ch1 << 8) + (ch2 << 0));
+    }
+ 	 ...
+}
+
+```
 
 
 
@@ -497,9 +1327,11 @@ public class FileInputTest2 {
 
 ---
 
-자바의 예외 처리에 대하여 알아보았다. try-catch 구문은 여러 다른 언어들에도 사용되기 때문에 익숙하지만 try-with-resources 구문 같은 경우는 생소하여 이번에 새롭게 알게 되었다. 리소스 해제를 일일이 설정하지 않아도 되는 편리함이 있기 때문에 유용하게 사용할 수 있겠다.
+Java의 입출력 스트림에 대하여 꽤 자세히 알아보았다.
 
-또한 Error, Exception을 구분하는 기준에 대하여도 정확히 설명하기 힘들었는데 이번 기회에 다룰 수 있어서 다행이다.
+입출력 스트림의 개념에서 부터 각 스트림의 의미,기능,종류를 알아보았고 입출력 스트림에 사용된 데코레이터 패턴까지 알아보았다.
+
+입출력 같은 경우 너무 간단하게 생각하여 제대로 알아보지 않고 넘어가는 경우가 많았는데 몰랐던 개념들도 있었고 잘못 알고 있던 개념들도 있었어서 생각보다 공부할 거리가 많았다.
 
 
 
@@ -510,3 +1342,9 @@ public class FileInputTest2 {
 Fastcampus JAVA기초 강의 - 박은종 강사님
 
 https://st-lab.tistory.com/92
+
+https://blog.naver.com/porshe99/60048101682
+
+https://velog.io/@semi-cloud/Effective-Java-%EC%95%84%EC%9D%B4%ED%85%9C-41-%EC%A0%95%EC%9D%98%ED%95%98%EB%A0%A4%EB%8A%94-%EA%B2%83%EC%9D%B4-%ED%83%80%EC%9E%85%EC%9D%B4%EB%9D%BC%EB%A9%B4-%EB%A7%88%EC%BB%A4-%EC%9D%B8%ED%84%B0%ED%8E%98%EC%9D%B4%EC%8A%A4%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%98%EB%9D%BC
+
+https://gmlwjd9405.github.io/2018/07/09/decorator-pattern.html
