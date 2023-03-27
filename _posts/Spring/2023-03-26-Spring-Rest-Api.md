@@ -328,7 +328,7 @@ public class DeleteController {
 
 ---
 
-Spring 프로젝트를 시작하기 전에 초기 프로젝트 세팅 방법에 대하여 알아보았다.
+Rest API의 개념과 Spring Boot 프로젝트에서 Rest API를 구현하기 위한 controller를 작성해 보았다.
 
 
 
