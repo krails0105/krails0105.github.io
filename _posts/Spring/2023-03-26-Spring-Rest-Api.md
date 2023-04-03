@@ -87,7 +87,7 @@ public class GetController {
 
 ```
 
-- `@RestController` : 적용된 Class가 rest api 로 동작 하도록 설정, annotation을 사용하여 spring에게 여기는 컨트롤러로 사용할거라는 것을 명시 
+- `@RestController` : 적용된 Class가 Json을 반환하는 컨트롤러로 동작 하도록 설정, annotation을 사용하여 spring에게 여기는 컨트롤러로 사용할거라는 것을 명시.
 - `@RequestMapping` : 외부에 api 주소를 노출 하는 설정 (어떤 주소로 받을 것인지 설정), HTTP Method(GET, POST, PUT, DELETE 등)를 적용 가능하며 method를 지정하지 않으면 전부 동작
 - 위 예시에서는 get method가 파라미터를 받는 부분이 없기 때문에 /getMethod 뒤에 어떤 파라미터를 붙여도 동일한 동작을 함 → ex) [localhost:8080/api/getMethod?id=1234](http://localhost:8080/api/getMethod?id=1234) 
 - 위 예시 코드를 작성하고 서버를 다시 실행하면 http://localhost:8080/api/getmethod 주소로 getRequest를 호출할 수 있고 아래와 같이 브라우저를 이용하여 테스트가 가능하다.

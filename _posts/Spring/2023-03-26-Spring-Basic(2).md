@@ -76,20 +76,42 @@ SpringBoot 프로젝트 생성은 크게 두 가지로 나뉜다.
 
 
 
-8. 빌드가 성공하고 난 뒤에 스프링 부트에서 기본적으로 제공해주는 Embeded 서버인 tomcat서버를 이용하여 서버를 띄울 수 있다.
+8. 빌드가 성공하고 난 뒤에 스프링 부트에서 기본적으로 제공해주는 Embeded WAS인 톰캣(tomcat)을 띄울 수 있다.
+   - 스프링 부트는 내장 WAS(Web Application Server)를 지원하여 별도의 외부 WAS를 설치할 필요없이 애플리케이션을 실행하면 자동으로 WAS를 실행할 수 있다.
+   - 아래와 같이 src/main/java/{package_name}/ 경로에 `@SpringBootApplication`가 설정된 메인 클래스가 있는데 코드 왼쪽에 보이는 재생 버튼을 누르고 Run을 실행하면 서버가 실행된다.
+   - Run을 실행하면 main함수에서 `SpringApplication.run` 이 수행되며 내장 WAS인 톰캣이 실행된다.
 
-- 아래와 같이 src/main/java/{package_name}/ 경로에 스프링 부트 어플리케이션 메인 클래스가 있는데 코드 왼쪽에 보이는 재생 버튼을 누르고 Run을 수행하면 서버가 실행된다.
+```java
+@SpringBootApplication
+public class DemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+
+}
+```
+
+
 
 ![14](../../assets/images/03-26-spring-basic/14.png)
 
 ![15](../../assets/images/03-26-spring-basic/15.png)
 
+서버가 성공적으로 띄워졌을 경우 아래와 같이 Tomcat started on port(s): 8080 로그가 남는 것을 확인할 수 있다.
 
-
-- 서버가 성공적으로 띄워졌을 경우 아래와 같이 Tomcat started on port(s): 8080 로그가 남는 것을 확인할 수 있다.
-  - 여기까지 성공적으로 진행하면 localhost:8080에 서버가 띄워진다.
+- 여기까지 성공적으로 진행하면 localhost:8080에 서버가 띄워진다.
 
 ![16](../../assets/images/03-26-spring-basic/16.png)
+
+
+
+### `@SpringBootApplication`
+
+- 스프링 부트의 여러 기본 설정 들을 자동으로 정의 해주는 어노테이션
+- 이러한 ***자동 설정들은 @SpringBootApplication이 있는 위치부터 읽어들여지기 때문에 해당 어노테이션은 항상 프로젝트의 최 상단에 위치*** 해야만 한다.
+
+
 
 ## start.spring.io에서 생성
 
