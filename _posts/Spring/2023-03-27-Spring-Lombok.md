@@ -296,8 +296,6 @@ void hashCodeAndEquals(){
 
 @Data 하나만 설정해도 위의 기능들을 모두 사용 가능하다.
 
-
-
 1) @Data를 사용하지 않은 경우
 
 ```java
@@ -331,6 +329,114 @@ public class SearchParam {
 
 
 ```
+
+
+
+### @Builder
+
+`@AllArgsConstructor`등 을 이용하여 자동으로 생성된 생성자는 매개 변수를 넣을 때 멤버 변수가 생성된 순서대로 인자를 넣어야한다. 또한 일부 멤버 변수만 사용하는 생성자를 사용하려면 `@RequiredArgsConstructor`를 이용 하던가 클래스에 원하는 생성자를 따로 만들어야 하는 불편함이 있다.
+
+@Builder를 사용하면 ***생성자를 만들지 않아도 자유롭게 어떤 형태의 생성자도 호출 가능***해지기 때문에 위의 불편함을 개선할 수 있다.
+
+```java
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Builder // builder 패턴의 생성자 사용
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String account;
+
+    private String phoneNumber;
+    
+
+}
+```
+
+
+
+아래 테스트 코드를 통해 기존 방식과 @Builder 방식의 생성자 호출의 차이점을 살펴보자.
+
+User 엔티티 클래스를 보면 @AllArgsConstructor, @NoArgsConstructor이 사용되었기 때문에 ***기존 생성자 호출 방식으로는 모든 인자를 사용하는 생성자와 기본 생성자를 사용***할 수 있다.
+
+이때, ***@Builder를 사용하면 어떤 인자를 사용하던 모든 경우의 생성자를 호출***할 수 있으며 멤버 변수나 인자의 순서와 상관 없이 생성자를 호출 할 수 있다. (즉, `builder().account().phoneNumber().build()`나` builder().phoneNumber().account().build()` 모두 사용 가능하다.
+
+```java
+@Test
+public void create(){
+    User user = new User(1L, "TestUser01", "TestUser01"); // @AllArgsConstructor로 생성된 생성자를 이용
+
+    User user2 = new User(); // @NoArgsConstructor로 생성된 생성자를 이용
+    user2.setAccount("TestUser01");
+    user2.setPhoneNumber("010-1111-1111");
+
+    User user3 = User.builder() // @Builder를 이용하여 생성자 호출
+            .account("TestUser01")
+            .phoneNumber("010-1111-1111")
+            .build();
+
+
+    User user4 = new User(1L, "TestUser01"); // Error!, Id, phoneNumber만 사용하는 생성자가 없음
+
+    User user5 = User.builder() // @Builder를 이용하면 추가적인 작업 없이 어떤 생성자도 호출 가능
+            .phoneNumber("010-1111-1111")
+            .build();
+
+    User user6 = User.builder() // @Builder를 이용하면 인자의 순서와 상관없이 자유롭게 생성자 호출 가능
+            .phoneNumber("010-1111-1111")
+            .account("TestUser01")
+            .build();
+
+}
+```
+
+
+
+### @Accessors
+
+setter를 연쇄적(chain)으로 호출할 수 있는 기능, 아래와 같이 `@Accessors(chain = true)`을 명시하여 사용한다.
+
+```java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Builder
+@Accessors(chain = true)
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String account;
+
+    private String phoneNumber;
+
+}
+```
+
+
+
+아래 예시 코드를 보면 user2를 생성할 때 setAccount, setPhoneNumber를 연쇄적으로 호출한 것을 볼 수 있다.
+
+```java
+@Test
+public void create(){
+    User user = new User(); // @Accessors를 이용하지 않으면 원하는 setter를 각각 호출해야 함
+    user.setAccount("TestUser01");
+    user.setPhoneNumber("010-1111-1111");
+
+    User user2 = new User().setAccount("TestUser01").setPhoneNumber("010-1111-1111"); // @Accessors를 이용한 setter 연속 호출
+
+}
+```
+
+
 
 
 
