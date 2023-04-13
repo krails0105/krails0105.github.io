@@ -103,8 +103,8 @@ Lombok 사용을 위해서는 아래와 같은 추가 설정이 필요하다
 
 ### 1. Lombok annotation processing 설정
 
-- window : File -> settings -> build, Execution, Deveployment -> Compiler > Annotation Processors -> Enable annotation prossing 체크 
-- macOS : IntelliJ IDEA -> Preferences -> build, Execution, Deveployment -> Compiler > Annotation Processors -> Enable annotation prossing 체크
+- window : File -> settings -> build, Execution, Deployment -> Compiler > Annotation Processors -> Enable annotation processing 체크 
+- macOS : IntelliJ IDEA -> Preferences -> build, Execution, Deployment -> Compiler > Annotation Processors -> Enable annotation processing 체크
 
 ![https://github.com/steve-developer/fastcampus-java/raw/master/06-admin-init/images/20201017_151448.png](../../assets/images/03-27-spring-lombok/2.png)
 
@@ -113,6 +113,20 @@ Lombok 사용을 위해서는 아래와 같은 추가 설정이 필요하다
 또는 아래처럼 프로젝트 진행시에 오른쪽 하단 경고 창을 통해서 설정 할 수 있다.
 
 ![image-20230328002732221](../../assets/images/03-27-spring-lombok/4.png)
+
+
+
+* Enable annotation prossing 설정을 하지 않으면 아래와 같이 `cannot find `symbol` 에러가 날 수 있다.
+
+```java
+error: cannot find symbol
+        Posts.builder().title(title).content(content).author("krails@gmail.com").build();
+             ^
+  symbol:   method builder()
+  location: class org.example.domain.posts.Posts
+```
+
+
 
 
 

@@ -77,6 +77,8 @@ dependencies {
 
 
 
+
+
 ### Controller 테스트 코드 작성
 
 이전 Rest API 관련 포스트에서 작성하였던 GetController 코드이다. response로 String타입의 "Get!" 문자열을 리턴해주고 있다.
@@ -114,6 +116,8 @@ public class GetController {
 package com.example.demo.controller;
 
 import org.junit.Test;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -130,6 +134,15 @@ public class UserContollerTest {
 
     @Autowired
     private MockMvc mvc;
+		
+   @Before
+    public void start() {
+        System.out.println("Test Start!");
+    }
+    @After
+    public void cleanup(){
+        System.out.println("Test End!");
+    }
 
     @Test
     public void getTest() throws Exception {
@@ -149,6 +162,10 @@ Contoller에 대한 기본적인 테스트 코드를 작성하였다. 코드에 
 - `@WebMvcTest`: Spring test 어노테이션 중 Web에 특화된 어노테이션, @Controller, @ControllerAdvice 등을 사용하여 테스트가 가능하지만 @Service, @Component, @Repository 등은 사용할 수 없기 때문에 컨트롤러 테스트에 유용하다.
 
 - `@Autowired`: Dependency injection(DI, 의존성 주입)을 위한 어노테이션으로 스프링이 관리하는 Bean을 주입
+
+- `@Before`: JUnit 단위 Test가 시작 전에 수행될 동작을 지정
+
+-  `@After`: JUnit 단위 Test가 끝날 때 수행될 동작을 지정
 
 - `@Test`: 해당 함수가 테스트에 사용될 함수임을 명시하는 어노테이션, ***junit 버전에 따라 @Test를 import하는 경로가 다르다.***
   - `@Test`의 경로 
