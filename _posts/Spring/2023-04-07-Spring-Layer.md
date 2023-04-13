@@ -32,8 +32,14 @@ SpringBoot 개발의 구조화를 위해 웹 개발의 계층 구조에 대해 �
 `Service Layer`
 
 - 서비스(@Service) 영역
-- Controller와 Dao(Data Access Object)의 중간 영역으로 @Transactional이 사용되는 영역
+- Controller와 Dao(Data Access Object)의 중간 영역으로 `@Transactional` 이 사용되는 영역
 - transaction, domain 기능의 순서를 보장
+
+> `@Transactional`
+>
+> 데이터 추가, 갱신, 삭제 등으로 이루어진 작업을 처리하던 중 ***오류가 발생했을 때 모든 작업들을 원상태로 되돌릴 수 있다***. 
+>
+> 테스트 메서드에 `@Transactional`을 사용하면 트랜잭션으로 감싸지며, ***메서드가 종료될 때 자동으로 해당 트랜잭션이 롤백된다.*** 만약 `WebEnvironment`의 `RANDOM_PORT`, `DEFINED_PORT`를 사용하여 테스트를 진행하면 실제 테스트 서버는 별도의 스레드에서 테스트를 수행하기 때문에 ***트랜잭션이 롤백되지 않는다.***
 
 `Repository Layer`
 
@@ -118,12 +124,12 @@ public Order cancelOrder(int orderId){
 
 ---
 
-Auditing과 AuditorAware에 대하여 알아 보았다.
-
-DB를 구성할 때 거의 필수로 구성되는 createdBy, createdAt 등을 자동으로 생성되게 해주는 유용한 기능이므로 반드시 알고 넘어가자
+웹 개발의 계층 구조에 대해 알아보았다.
 
 # Reference
 
 ---
 
 스프링 부트와 AWS로 혼자 구현하는 웹 서비스 - 이동욱님
+
+https://tecoble.techcourse.co.kr/post/2021-05-25-transactional/
