@@ -295,6 +295,130 @@ public class UserContollerTest {
 
 
 
+JUnit5에는 아래와 같이 `assertAll`이 추가되었으며 `assertAll`은 excutable이라는 함수형 인터페이스를 받고 있기 때문에 모든 검증문을 fail과 상관없이 한꺼번에 많은 assert문을 검증 가능
+
+```java
+assertAll(
+        () -> assertThat(result.getName()).isEqualTo("martin"),
+        () -> assertThat(result.getHobby()).isEqualTo("programming"),
+        () -> assertThat(result.getAddress()).isEqualTo("seoul"),
+        () -> assertThat(result.getBirthday()).isEqualTo(Birthday.of(LocalDate.now())),
+        () -> assertThat(result.getJob()).isEqualTo("programmer"),
+        () -> assertThat(result.getPhoneNumber()).isEqualTo("010-111-222")
+);
+```
+
+
+
+## TestRestTemplate
+
+`REST API Test`를 위한 클래스로 HTTP 요청과 응답을 받을 수 있다.
+
+위에서 테스트한 방식인 @WebMvcTest는 JPA 기능이 동작하지 않고 Controller, ControllerAdvice 등 외부 연동과 관련된 부분만 활성화 된다.
+
+API + JPA를 같이 테스트하고 싶을 때는 아래와 같이 `@SpringBootTest`와 `TestRestTemplate`을 사용한다.
+
+````java
+package com.example.demo.web;
+
+import com.example.demo.posts.Posts;
+import com.example.demo.posts.PostsRepository;
+import com.example.demo.web.dto.PostsSaveRequestDto;
+import org.junit.After;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) // 랜덤 포트 할당
+public class PostsApiControllerTest {
+
+    @LocalServerPort
+    private int port;
+
+    @Autowired
+    private TestRestTemplate restTemplate; // API 테스트를 위한 객체
+
+    @Autowired
+    private PostsRepository postsRepository;
+
+    @After
+    public void tearDown() throws Exception{
+        postsRepository.deleteAll();
+    }
+
+    @Test
+    public void PostsTest() throws Exception{
+        // given
+        String title = "title";
+        String content = "content";
+        PostsSaveRequestDto requestDto = PostsSaveRequestDto.builder()
+                .title(title)
+                .content(content)
+                .author("krails@gmail.com")
+                .build();
+
+        String url = "http://localhost:" + port + "/api/v1/posts";
+
+        // when
+        ResponseEntity<Long> responseEntity = restTemplate.postForEntity(url,requestDto, Long.class); // url에 requestDto데이터를 이용하여 post 요청을 보내고 Long.class형식의 응답을 받음
+
+        // then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseEntity.getBody()).isGreaterThan(0L);
+
+        List<Posts> all = postsRepository.findAll();
+        assertThat(all.get(0).getTitle()).isEqualTo(title);
+        assertThat(all.get(0).getContent()).isEqualTo(content);
+    }
+}
+
+````
+
+- `webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT`: 테스트 실행 시 호스트가 사용하지 않는 랜덤 포트가 할당
+- `@LocalServerPort`:  실행중인 HTTP server의 port를 할당받음
+- `restTemplate.postForEntity`:  post 요청을 보내고 `ResponseEntity`형식의 응답을 받는다.
+
+
+
+## jsonPath
+
+Json 응답이 있는 HTTP 메서드를 검증할 때 유용한 메서드
+
+가령 get 요청을 보내면 Person 객체(json)가 리턴되는 메서드가 있다고 한다면 아래와 같은 방법으로 리턴되는 json의 key, value를 검증할 수 있다. 
+
+```java
+...
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+...
+
+@Test
+void getPerson() throws Exception{
+    mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/person/1"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("martin")) 	 // Person의 name 필드 값 검증, assertThat(result.getName()).isEqualTo("martin") 과 같은 의미
+      			.andExpect(jsonPath("$.phoneNumber").isEmpty()); // Person의 phoneNumber 필드 값 검증
+}
+```
+
+- `$`: 객체를 의미
+- `$.name`: 리턴되는 객체에서 name이라는 attribute를 가져오겠다.
+- `.value()`를 이용하여 단순히 key 값이 아닌 value까지도 검증까지 가능
+
+
+
 # Conclusion
 
 ---
@@ -314,3 +438,5 @@ https://junit.org/junit5/docs/current/user-guide/
 https://jongmin92.github.io/2020/03/31/Java/use-assertthat/
 
 https://jwkim96.tistory.com/168
+
+https://easybrother0103.tistory.com/64
