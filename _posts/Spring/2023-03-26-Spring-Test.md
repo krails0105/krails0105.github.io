@@ -163,9 +163,9 @@ Contoller에 대한 기본적인 테스트 코드를 작성하였다. 코드에 
 
 - `@Autowired`: Dependency injection(DI, 의존성 주입)을 위한 어노테이션으로 스프링이 관리하는 Bean을 주입
 
-- `@Before`: JUnit 단위 Test가 시작 전에 수행될 동작을 지정
+- `@Before`: JUnit 단위 Test가 시작 전에 수행될 동작을 지정 (JUnit 5에서는 @BeforeEach)
 
--  `@After`: JUnit 단위 Test가 끝날 때 수행될 동작을 지정
+- `@After`: JUnit 단위 Test가 끝날 때 수행될 동작을 지정
 
 - `@Test`: 해당 함수가 테스트에 사용될 함수임을 명시하는 어노테이션, ***junit 버전에 따라 @Test를 import하는 경로가 다르다.***
   - `@Test`의 경로 
