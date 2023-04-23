@@ -99,7 +99,7 @@ header에는 css를 적용하고 footer에는 js를 적용하여 레이아웃을
 
 생성한 header, footer를 index.mustache에 앞/뒤로 추가하고 버튼을 생성하여 /posts/save 주소와 연결시킨다.
 
-- {{> }} 현재 머스테치 파일 기준으로 경로를 설정하여 다른 파일을 가져옴
+- `{{> }}`: 현재 머스테치 파일 기준으로 경로를 설정하여 다른 파일을 가져옴
 
 ```html
 {{>layout/header}}
@@ -207,7 +207,8 @@ index.js는 아래와 같이 구성된다.
 var main = {
     init : function () {
         var _this = this;
-        $('#btn-save').on('click', function () { // btn-save이 클릭 되면 save 함수 호출
+	      // btn-save의 id를 가진 HTML 원소에 click 이벤트가 발생했을 때, save 함수 호출
+        $('#btn-save').on('click', function () {
             _this.save();
         });
     },
@@ -219,14 +220,14 @@ var main = {
         };
 
         $.ajax({
-            type: 'POST',
-            url: '/api/v1/posts',      // /api/v1/posts에 post 요청을 보냄
+            type: 'POST',							  // http 메서드 중 POST 호출
+            url: '/api/v1/posts',       // 호출할 URL path 설정, ''/api/v1/posts'에 post 요청을 보냄
             dataType: 'json',
             contentType:'application/json; charset=utf-8',
-            data: JSON.stringify(data) // post 요청에 포함할 json 데이터
+            data: JSON.stringify(data)  // post 요청에 포함할 json 데이터
         }).done(function() {
             alert('글이 등록되었습니다.');   // 팝업 창을 띄움
-            window.location.href = '/'; // '/' 주소로 이동
+            window.location.href = '/'; // 함수 호출이 완료되면 '/' 주소로 이동
         }).fail(function (error) {
             alert(JSON.stringify(error));
         });
