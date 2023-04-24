@@ -240,7 +240,7 @@ main.init();
 
 
 
-위 코드를 보면 `/api/v1/posts`에 post 요청을 보내는데 해당 요청을 받기 위한 controller은 아래와 같이 구성할 수 있다. (서비스 단은 생략)
+위 코드를 보면 `/api/v1/posts`에 POST 요청을 보내는데 해당 요청을 받기 위한 controller은 아래와 같이 구성할 수 있다. (서비스 단은 생략)
 
 ```java
 package com.example.demo.web;

@@ -1,5 +1,5 @@
 ---
-title: "[SpringBoot] 머스테치(Mustache) (3) - 추가 기능 구성"
+title: "[SpringBoot] 시큐리티(Security)"
 categories:
   - Spring, Mustache
 tags:
@@ -436,8 +436,6 @@ main.init();
 ```
 
 위 코드는 `/api/v1/posts/{id}` url에 DELETE http 메서드를 요청하는 기능이 구현되어 있다.
-
-- `/api/v1/posts/{id}`는 PUT과 DELETE에 공통적으로 사용되고 있는데 이처럼 URL이 중복되도 컨트롤러의 `@PutMapping`, `@DeleteMapping`으로 구분되어 있기 때문에 문제가 없다.
 
 
 
