@@ -1,5 +1,5 @@
 ---
-title: "[SpringBoot] 시큐리티(Security)"
+title: "[SpringBoot] 스프링 시큐리티(Spring Security)"
 categories:
   - Spring, Mustache
 tags:
@@ -12,17 +12,17 @@ tags:
 
 ---
 
-이전 포스트에서는 화면 구성과 post 기능을 구현했었는데 이에 추가로 다양한 기능을 구현해보자.
+스프링 시큐리티
 
 
 
-# 전체 화면 조회
+# 스프링 시큐리티(Spring Security)
 
 ---
 
-![image-20230423232455486](../../assets/images/04-14-mustache/11.png)
+인증(Authentication)과 인가(Authorization) 기능을 가진 프레임워크, 스프링 애플리케이션의 보안을 위한 표준
 
-기존에 만들었던 index 화면에서 위와 같이 테이블 형식으로 전체 데이터를 조회하는 화면을 추가하도록 한다.
+다른 스프링 프로젝트(Mvc, Data, Batch ..)와 같이 확장성을 고려하였기 때문에 요구 사항의 추가, 변경이 간단하다는 장점을 가짐
 
 ​    
 
