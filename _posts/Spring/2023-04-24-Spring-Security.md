@@ -1,9 +1,9 @@
 ---
-title: "[SpringBoot] 스프링 시큐리티(Spring Security)"
+title: "[SpringBoot] 스프링 시큐리티(Spring Security) - OAuth2.0"
 categories:
-  - Spring, Mustache
+  - Spring
 tags:
-  - [Java, Spring, Mustache]
+  - [Java, Spring]
 ---
 
 
