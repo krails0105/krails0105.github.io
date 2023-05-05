@@ -150,8 +150,6 @@ public enum CommonOAuth2Provider {
 
 ![12](../../assets/images/05-01-spring-security/12.png)
 
-
-
 11. `사용자 인증 정보 만들기` -> `OAuth 클라이언트 ID` 선택
 
 ![13](../../assets/images/05-01-spring-security/13.png)
