@@ -94,10 +94,23 @@ public class KrxChartDataProvider implements ChartDataProvider {
   private static final String NAVER_CHART_API_BASE =
       "https://fchart.stock.naver.com/siseJson.nhn";
 
+  // 타임아웃 설정 (중요!)
+  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+  private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
+
   private final RestClient restClient;
 
   public KrxChartDataProvider() {
+    // 타임아웃이 있는 RequestFactory 생성
+    ClientHttpRequestFactorySettings settings =
+        ClientHttpRequestFactorySettings.defaults()
+            .withConnectTimeout(CONNECT_TIMEOUT)
+            .withReadTimeout(READ_TIMEOUT);
+    ClientHttpRequestFactory requestFactory =
+        ClientHttpRequestFactoryBuilder.detect().build(settings);
+
     this.restClient = RestClient.builder()
+        .requestFactory(requestFactory)  // 타임아웃 적용
         .defaultHeader("User-Agent", "Mozilla/5.0")
         .defaultHeader("Referer", "https://finance.naver.com")
         .build();
@@ -168,6 +181,26 @@ public class KrxChartDataProvider implements ChartDataProvider {
 ```
 
 개발 환경(local)에서는 MockChartDataProvider가, 운영 환경(prod)에서는 KrxChartDataProvider가 사용됩니다.
+
+### 4. 타임아웃 설정
+
+외부 API 호출 시 타임아웃을 설정하지 않으면 서버가 응답하지 않을 때 무한 대기할 수 있습니다.
+
+```java
+private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
+
+ClientHttpRequestFactorySettings settings =
+    ClientHttpRequestFactorySettings.defaults()
+        .withConnectTimeout(CONNECT_TIMEOUT)
+        .withReadTimeout(READ_TIMEOUT);
+```
+
+**설정 값 의미:**
+- `CONNECT_TIMEOUT(5초)`: 서버에 연결하는 데 최대 5초 대기
+- `READ_TIMEOUT(10초)`: 응답을 읽는 데 최대 10초 대기
+
+타임아웃이 발생하면 `RestClientException`이 던져지고, Graceful Degradation에 의해 빈 응답이 반환됩니다.
 
 # 외부 API 응답 파싱
 
@@ -287,11 +320,12 @@ void shouldSkipInvalidDataFormat() {
 외부 API 연동 시 핵심 원칙:
 
 1. **캐시 적용**: 레이트 리밋 대응, 응답 속도 향상
-2. **Graceful Degradation**: 실패해도 서비스는 계속
-3. **Profile 분리**: 환경별 다른 구현체 사용
-4. **견고한 파싱**: 예외 상황에서도 안정적으로 동작
+2. **타임아웃 설정**: 무한 대기 방지, 서비스 안정성 확보
+3. **Graceful Degradation**: 실패해도 서비스는 계속
+4. **Profile 분리**: 환경별 다른 구현체 사용
+5. **견고한 파싱**: 예외 상황에서도 안정적으로 동작
 
-캐시는 단순히 성능을 위한 것이 아니라, 외부 의존성으로부터 서비스를 보호하는 방패입니다.
+캐시와 타임아웃은 단순히 성능을 위한 것이 아니라, 외부 의존성으로부터 서비스를 보호하는 방패입니다.
 
 # Reference
 
