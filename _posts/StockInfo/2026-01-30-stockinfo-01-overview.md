@@ -10,6 +10,8 @@ tags:
 
 ---
 
+> **시리즈 안내**: 이 글은 Stock-Info 프로젝트 시리즈의 첫 번째 글입니다. 전체 17편으로 구성되어 있으며, Spring Boot 백엔드부터 React 프론트엔드까지 풀스택 웹 개발을 단계별로 학습합니다.
+
 Stock-Info는 **주식 투자 초보자**를 위한 한국 주식 정보 서비스입니다.
 
 주식 투자를 처음 시작하면 PER, PBR, EPS 같은 용어부터 막막합니다. 이 프로젝트는 복잡한 재무 지표를 **10초 안에 이해할 수 있는 요약**으로 제공하고, 섹터(업종)별로 종목을 쉽게 탐색할 수 있게 합니다.
@@ -274,6 +276,14 @@ npm run dev
 |------|------|----------|
 | 15 | 인사이트 컴포넌트 | StockDetailSummary, SectorTopPicks |
 | 16 | 인터랙티브 기능 | 검색, 즐겨찾기, 차트 |
+
+# 다음 글
+
+---
+
+다음 글에서는 Spring Controller의 기본 개념과 REST API 설계를 알아봅니다.
+
+→ **[02. Spring Controller - REST API의 입구](/stockinfo/stockinfo-02-be-controller/)**
 
 # Reference
 

@@ -10,6 +10,8 @@ tags:
 
 ---
 
+> **시리즈 안내**: 이 글은 Stock-Info 프로젝트 시리즈의 마지막 글(17/17)입니다.
+
 서비스가 "실제로 동작한다"는 것과 "실제 데이터를 보여준다"는 것은 다릅니다. Phase 3까지 Mock 데이터로 UI를 완성했다면, Phase 4에서는 실제 데이터를 연동하여 서비스의 신뢰도를 높입니다.
 
 이번 글에서는 외부 API를 연동할 때 고려해야 할 점과 Spring Boot에서 캐시를 적용하는 방법을 Stock-Info 차트 기능 구현을 통해 설명합니다.
@@ -326,6 +328,39 @@ void shouldSkipInvalidDataFormat() {
 5. **견고한 파싱**: 예외 상황에서도 안정적으로 동작
 
 캐시와 타임아웃은 단순히 성능을 위한 것이 아니라, 외부 의존성으로부터 서비스를 보호하는 방패입니다.
+
+# 시리즈 완료
+
+---
+
+Stock-Info 시리즈를 모두 완료했습니다! 이 시리즈에서 다룬 내용을 정리합니다.
+
+## 배운 것들
+
+**Backend (Spring Boot)**
+- Controller, Service, Provider 계층 구조
+- DTO 설계와 변환 패턴
+- JPA Entity와 Repository
+- Rule Engine을 이용한 점수 시스템
+- RSS 뉴스 수집 파이프라인
+- 캐시와 외부 API 연동
+
+**Frontend (React + TypeScript)**
+- 컴포넌트, Props, State의 기본 개념
+- Custom Hooks (useDebounce, useLocalStorage)
+- Axios를 이용한 API Layer
+- CSS 디자인 토큰과 컴포넌트 스타일링
+- 검색, 즐겨찾기, 차트 등 인터랙티브 기능
+
+## 다음 단계
+
+이 프로젝트를 확장하려면:
+- **테스트 작성**: JUnit, React Testing Library
+- **CI/CD 구축**: GitHub Actions
+- **배포**: AWS, Vercel, Railway 등
+- **모니터링**: 로깅, 메트릭, 알림
+
+→ **[01. 프로젝트 개요로 돌아가기](/stockinfo/stockinfo-01-overview/)**
 
 # Reference
 
