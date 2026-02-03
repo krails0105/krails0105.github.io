@@ -10,7 +10,7 @@ tags:
 
 ---
 
-Quiz Generator 프로젝트 코드를 통해 TypeScript의 비동기 프로그래밍 패턴을 알아봅니다.
+실제 React 프로젝트 예시를 통해 TypeScript의 비동기 프로그래밍 패턴을 알아봅니다.
 
 # 1. async/await 기초
 

@@ -10,7 +10,7 @@ tags:
 
 ---
 
-Quiz Generator 프로젝트 코드를 통해 React 훅에서 TypeScript를 사용하는 방법을 알아봅니다.
+실제 React 프로젝트 예시를 통해 React 훅에서 TypeScript를 사용하는 방법을 알아봅니다.
 
 # 1. useState 타입
 

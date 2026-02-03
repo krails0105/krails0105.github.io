@@ -10,7 +10,7 @@ tags:
 
 ---
 
-Quiz Generator 프로젝트 코드를 통해 TypeScript 함수 타입과 제네릭을 알아봅니다.
+실제 React 프로젝트 예시를 통해 TypeScript 함수 타입과 제네릭을 알아봅니다.
 
 # 1. 함수 매개변수 타입
 

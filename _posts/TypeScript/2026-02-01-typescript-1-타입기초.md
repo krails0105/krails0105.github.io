@@ -10,7 +10,9 @@ tags:
 
 ---
 
-Quiz Generator 프로젝트 코드를 통해 TypeScript의 기본 타입 문법을 알아봅니다.
+실제 React 프로젝트 예시를 통해 TypeScript의 기본 타입 문법을 알아봅니다.
+
+> **예시 프로젝트**: 이 시리즈에서는 "Quiz Generator"라는 심리 테스트 생성 앱의 코드를 예시로 사용합니다. AI로 퀴즈를 생성하고, 사용자가 퀴즈를 풀면 결과를 보여주는 React + TypeScript 앱입니다.
 
 # 1. 기본 타입
 
@@ -212,6 +214,58 @@ import type { Question, Theme, Status } from './types';
 ```
 
 `import type`은 타입만 가져옵니다 (런타임에 사용 안 됨).
+
+# 9. 유틸리티 타입 (Utility Types)
+
+---
+
+TypeScript가 기본 제공하는 타입 변환 도구입니다.
+
+## Partial<T> - 모든 속성을 선택적으로
+
+```typescript
+interface User {
+  name: string;
+  age: number;
+  email: string;
+}
+
+// 모든 속성이 선택적 (업데이트 시 유용)
+type PartialUser = Partial<User>;
+// { name?: string; age?: number; email?: string; }
+
+function updateUser(id: string, updates: Partial<User>) {
+  // name만 업데이트해도 OK
+}
+updateUser('1', { name: '새이름' });
+```
+
+## Pick<T, K> - 특정 속성만 선택
+
+```typescript
+// name과 email만 선택
+type UserPreview = Pick<User, 'name' | 'email'>;
+// { name: string; email: string; }
+```
+
+## Omit<T, K> - 특정 속성 제외
+
+```typescript
+// age 제외
+type UserWithoutAge = Omit<User, 'age'>;
+// { name: string; email: string; }
+```
+
+## 자주 쓰는 유틸리티 타입
+
+| 타입 | 설명 |
+|------|------|
+| `Partial<T>` | 모든 속성을 선택적으로 |
+| `Required<T>` | 모든 속성을 필수로 |
+| `Pick<T, K>` | 특정 속성만 선택 |
+| `Omit<T, K>` | 특정 속성 제외 |
+| `Record<K, V>` | 키-값 객체 타입 |
+| `Readonly<T>` | 모든 속성을 읽기 전용으로 |
 
 # Reference
 
