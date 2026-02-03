@@ -26,6 +26,14 @@ TypeScript를 위한 **스키마 검증 라이브러리**입니다.
 - Zod로 런타임에도 데이터 형식 검증 가능
 ```
 
+## 설치
+
+```bash
+npm install zod
+```
+
+> **참고**: Zod는 TypeScript 4.5+ 필요, 추가 설정 없이 바로 사용 가능
+
 # 2. 기본 스키마
 
 ---
@@ -165,44 +173,51 @@ if (result.success) {
 }
 ```
 
-# 8. Quiz Generator에서의 사용
+# 8. 실전: API 응답 검증
 
 ---
 
+## fetch와 함께 사용
+
 ```typescript
-// src/lib/generators/theme.ts
+// API 응답 스키마 정의
+const UserResponseSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email(),
+  createdAt: z.string(),  // ISO 날짜 문자열
+});
 
-import { ThemeSchema, type Theme } from '@/lib/schemas/theme';
-import { extractJSON } from '@/lib/ai/client';
+type UserResponse = z.infer<typeof UserResponseSchema>;
 
-export async function generateTheme(topic: string): Promise<Theme> {
-  const result = await generateWithClaude<Theme>(
-    systemPrompt,
-    userPrompt,
-    (text) => {
-      // AI 응답에서 JSON 추출
-      const json = extractJSON(text);
-      // Zod로 검증하고 타입 확정
-      return ThemeSchema.parse(JSON.parse(json));
-    }
-  );
+// API 호출 함수
+async function fetchUser(id: number): Promise<UserResponse> {
+  const response = await fetch(`/api/users/${id}`);
+  const data = await response.json();
 
-  return result;
+  // Zod로 검증 - 잘못된 응답이면 에러 발생
+  return UserResponseSchema.parse(data);
+}
+
+// 사용
+try {
+  const user = await fetchUser(1);
+  console.log(user.name);  // 타입 안전하게 접근
+} catch (error) {
+  console.error('API 응답 형식이 잘못됨');
 }
 ```
 
 ## 전체 흐름
 
 ```
-AI 응답 (문자열)
+API 응답 (unknown)
     ↓
-JSON 추출 (extractJSON)
+JSON 파싱 (response.json()) → any 타입
     ↓
-JSON 파싱 (JSON.parse) → any 타입
+Zod 검증 (Schema.parse) → 정확한 타입 확정
     ↓
-Zod 검증 (ThemeSchema.parse) → Theme 타입 확정
-    ↓
-안전하게 사용
+타입 안전하게 사용
 ```
 
 # 9. 복합 스키마 예시
@@ -237,9 +252,36 @@ export type Option = z.infer<typeof OptionSchema>;
 export type ScoringRule = z.infer<typeof ScoringRuleSchema>;
 ```
 
+# 10. Zod vs 수동 검증 비교
+
+---
+
+```typescript
+// ❌ 수동 검증 (장황하고 타입 불안전)
+function validateUser(data: unknown): User {
+  if (typeof data !== 'object' || data === null) {
+    throw new Error('Invalid data');
+  }
+  if (typeof (data as any).name !== 'string') {
+    throw new Error('Invalid name');
+  }
+  // ... 모든 필드 수동 검증
+  return data as User;  // 타입 단언 필요
+}
+
+// ✅ Zod (간결하고 타입 안전)
+const UserSchema = z.object({
+  name: z.string(),
+  age: z.number(),
+});
+type User = z.infer<typeof UserSchema>;
+
+const user = UserSchema.parse(data);  // 자동으로 User 타입
+```
+
 # Reference
 
 ---
 
 - [Zod 공식 문서](https://zod.dev/)
-- Quiz Generator: `src/lib/schemas/`
+- [Zod GitHub](https://github.com/colinhacks/zod)
