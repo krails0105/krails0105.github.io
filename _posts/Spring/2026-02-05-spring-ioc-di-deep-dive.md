@@ -205,6 +205,7 @@ public class SingletonService {
         this.prototypeBean = prototypeBean;
         // 문제: singleton 생성 시점에 한 번만 주입됨
         // → prototypeBean이 사실상 singleton처럼 동작
+        // 비유: 매번 새 종이컵을 받아야 하는데, 처음 받은 컵 하나만 계속 쓰는 상황
     }
 }
 

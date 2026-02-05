@@ -117,6 +117,7 @@ public non-sealed class Triangle extends Shape { // non-sealed: 자유롭게 상
 ```
 
 ```text
+permits는 "이 클래스만 상속할 수 있다"는 허가 명단입니다.
 permits 절의 서브클래스는 반드시 다음 중 하나:
   - final: 더 이상 상속 불가
   - sealed: 다시 permits로 제한

@@ -137,6 +137,8 @@ public void example() {
 GC Root에서 참조 체인을 따라갈 수 있는 객체 = "도달 가능" (살림)
 GC Root에서 도달할 수 없는 객체 = "도달 불가능" (수거)
 
+비유: 조직도에서 CEO(GC Root)로부터 보고라인이 끊긴 부서는 정리 대상이 됩니다.
+
 GC Root가 되는 것:
   - Stack의 지역 변수
   - static 변수
