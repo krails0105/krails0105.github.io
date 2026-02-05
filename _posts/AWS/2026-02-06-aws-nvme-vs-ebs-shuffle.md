@@ -1,9 +1,9 @@
 ---
-title: "[Spark] NVMe vs EBS - Spark 셔플 성능에 로컬 디스크가 중요한 이유"
+title: "[AWS] NVMe vs EBS - Spark 셔플 성능에 로컬 디스크가 중요한 이유"
 categories:
-  - Spark
+  - AWS
 tags:
-  - [Spark, AWS, EC2, NVMe, EBS, Shuffle, Spill, DiskIO]
+  - [AWS, EC2, NVMe, EBS, Spark, Shuffle, Spill, DiskIO]
 ---
 
 # Introduction
@@ -28,7 +28,7 @@ NVMe 방식 (로컬 스토리지):
   CPU ──→ PCIe 버스 ──→ NVMe SSD (같은 서버에 물리적으로 장착)
 ```
 
-핵심 차이는 **네트워크를 경유하느냐(EBS), CPU에서 PCIe로 직접 접근하느냐(NVMe)**입니다. 이 경로 차이가 latency와 throughput에 직접적으로 반영됩니다.
+핵심 차이는 **네트워크를 경유하느냐(EBS), CPU에서 PCIe로 직접 접근하느냐(NVMe)**입니다. 비유하면 EBS는 택배로 물건을 받는 것이고, NVMe는 내 서랍에서 바로 꺼내는 것입니다. 이 경로 차이가 latency와 throughput에 직접적으로 반영됩니다.
 
 # 2. 성능 비교: NVMe vs EBS
 

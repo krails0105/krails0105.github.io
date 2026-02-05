@@ -1,7 +1,7 @@
 ---
-title: "[Spark] Memory Optimized의 실체 - r-type은 메모리가 빠른 게 아니라 많은 것"
+title: "[AWS] Memory Optimized의 실체 - r-type은 메모리가 빠른 게 아니라 많은 것"
 categories:
-  - Spark
+  - AWS
 tags:
   - [AWS, EC2, MemoryOptimized, InstanceType, Hardware, Performance]
 ---
@@ -69,7 +69,7 @@ CPU 성능은 거의 동일 (c5만 클럭이 약간 높음: 3.4 GHz vs 3.1 GHz)
 차이는 오직 "메모리 용량"과 "가격"
 ```
 
-**"Memory Optimized" = 같은 vCPU 수에 메모리를 더 많이 제공**하는 것이지, 메모리가 더 빠른 것이 아닙니다.
+**"Memory Optimized" = 같은 vCPU 수에 메모리를 더 많이 제공**하는 것이지, 메모리가 더 빠른 것이 아닙니다. 같은 엔진(CPU)과 같은 도로(DDR4)를 쓰지만, r-type은 짐칸(메모리)이 더 큰 트럭인 셈입니다.
 
 # 3. per-core 메모리 대역폭은 오히려 c-type이 약간 높음
 
