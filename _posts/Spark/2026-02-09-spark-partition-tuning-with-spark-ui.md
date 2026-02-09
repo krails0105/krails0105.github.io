@@ -127,14 +127,14 @@ Input이 4개 task에 걸쳐 289 records뿐 → **이 소스 테이블의 Parque
 쿼리 플랜(Physical Plan)에서 이 stage가 스캔하는 테이블을 확인합니다:
 
 ```text
-(11) Scan parquet tech_lakehouse_prod.bitcoin.unspent_utxo_snapshot
+(11) Scan parquet my_database.unspent_utxo_snapshot
      PushedFilters: [IsNotNull(snapshot_block_height), ...]
 ```
 
 그리고 Delta 테이블의 파일 수를 확인:
 
 ```sql
-DESCRIBE DETAIL tech_lakehouse_prod.bitcoin.unspent_utxo_snapshot;
+DESCRIBE DETAIL my_database.unspent_utxo_snapshot;
 -- numFiles: 15
 ```
 
