@@ -11,20 +11,6 @@ layout: archive
   {% endif %}
 {% endfor %}
 
-<ul class="taxonomy__index">
-  {% for i in (1..categories_max) reversed %}
-    {% for category in site.categories %}
-      {% if category[1].size == i %}
-        <li>
-          <a href="#{{ category[0] | slugify }}">
-            <strong>{{ category[0] }}</strong> <span class="taxonomy__count">{{ i }}</span>
-          </a>
-        </li>
-      {% endif %}
-    {% endfor %}
-  {% endfor %}
-</ul>
-
 {% assign entries_layout = page.entries_layout | default: 'list' %}
 {% for i in (1..categories_max) reversed %}
   {% for category in site.categories %}
@@ -36,8 +22,25 @@ layout: archive
             {% include archive-single.html type=entries_layout %}
           {% endfor %}
         </div>
-        <a href="#page-title" class="back-to-top">{{ site.data.ui-text[site.locale].back_to_top | default: 'Back to Top' }} &uarr;</a>
       </section>
     {% endif %}
   {% endfor %}
 {% endfor %}
+
+<script>
+(function() {
+  function filterByHash() {
+    var hash = window.location.hash.substring(1);
+    var sections = document.querySelectorAll('.taxonomy__section');
+    if (!hash) {
+      sections.forEach(function(s) { s.style.display = ''; });
+      return;
+    }
+    sections.forEach(function(s) {
+      s.style.display = (s.id === hash) ? '' : 'none';
+    });
+  }
+  filterByHash();
+  window.addEventListener('hashchange', filterByHash);
+})();
+</script>
