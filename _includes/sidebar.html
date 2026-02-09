@@ -10,14 +10,24 @@
           {% assign categories_max = category[1].size %}
         {% endif %}
       {% endfor %}
+      {% assign cat_count = 0 %}
       {% for i in (1..categories_max) reversed %}
         {% for category in site.categories %}
           {% if category[1].size == i %}
-            <li><a href="/categories/#{{ category[0] | slugify }}">{{ category[0] }} <span>({{ category[1].size }})</span></a></li>
+            {% assign cat_count = cat_count | plus: 1 %}
+            <li {% if cat_count > 8 %}class="sidebar-categories__hidden" style="display:none"{% endif %}>
+              <a href="/categories/#{{ category[0] | slugify }}">{{ category[0] }} <span>({{ category[1].size }})</span></a>
+            </li>
           {% endif %}
         {% endfor %}
       {% endfor %}
     </ul>
+    {% assign total_cats = site.categories | size %}
+    {% if total_cats > 8 %}
+      <button class="sidebar-categories__toggle" onclick="(function(btn){var items=document.querySelectorAll('.sidebar-categories__hidden');var shown=items[0]&&items[0].style.display!=='none';items.forEach(function(el){el.style.display=shown?'none':''});btn.textContent=shown?'Show all ({{ total_cats }})':'Show less'})(this)">
+        Show all ({{ total_cats }})
+      </button>
+    {% endif %}
   </nav>
   {% if page.sidebar %}
     {% for s in page.sidebar %}

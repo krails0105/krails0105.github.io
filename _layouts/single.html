@@ -45,6 +45,12 @@ layout: default
               {% include toc.html sanitize=true html=content h_min=1 h_max=6 class="toc__menu" skip_no_ids=true %}
             </nav>
           </aside>
+        {% else %}
+          <!-- JS-based TOC: mobile toggle + sidebar -->
+          <button class="toc-toggle" id="toc-toggle">On this page</button>
+          <aside class="sidebar__right sticky">
+            <nav class="toc-sidebar" id="toc-sidebar"></nav>
+          </aside>
         {% endif %}
         {{ content }}
         {% if page.link %}<div><a href="{{ page.link }}" class="btn btn--primary">{{ site.data.ui-text[site.locale].ext_link_label | default: "Direct Link" }}</a></div>{% endif %}
@@ -59,6 +65,28 @@ layout: default
       </footer>
 
       {% if page.share %}{% include social-share.html %}{% endif %}
+
+      <!-- Previous / Next post navigation -->
+      {% if page.previous or page.next %}
+        <nav class="post-nav">
+          {% if page.previous %}
+            <div class="post-nav__item">
+              <span class="post-nav__label">&larr; Previous</span>
+              <a href="{{ page.previous.url | relative_url }}" class="post-nav__title">{{ page.previous.title }}</a>
+            </div>
+          {% else %}
+            <div class="post-nav__item"></div>
+          {% endif %}
+          {% if page.next %}
+            <div class="post-nav__item post-nav__item--next">
+              <span class="post-nav__label">Next &rarr;</span>
+              <a href="{{ page.next.url | relative_url }}" class="post-nav__title">{{ page.next.title }}</a>
+            </div>
+          {% else %}
+            <div class="post-nav__item post-nav__item--next"></div>
+          {% endif %}
+        </nav>
+      {% endif %}
 
       {% include post_pagination.html %}
     </div>
@@ -93,3 +121,5 @@ layout: default
     </div>
   {% endif %}
 </div>
+
+<script src="{{ '/assets/js/toc.js' | relative_url }}"></script>
