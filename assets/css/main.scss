@@ -5,8 +5,32 @@ search: false
 
 @charset "utf-8";
 
+// Variable overrides (before imports - !default won't override these)
+$max-width: 1440px;
+
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
+
+// Page title - reduce size
+.page__title {
+  font-size: $type-size-3; // 1.563em → 25px (down from default h1)
+}
+
+.archive .page__title {
+  font-size: $type-size-4; // archive/home page title even smaller
+}
+
+// Hits counter in sidebar
+.sidebar .hits-badge {
+  display: block;
+  margin-top: 1em;
+
+  img {
+    max-width: 80px;
+    height: auto;
+    opacity: 0.6;
+  }
+}
 
 // Category buttons on homepage
 .category-buttons {
