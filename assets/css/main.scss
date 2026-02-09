@@ -7,3 +7,25 @@ search: false
 
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
+
+// Category buttons on homepage
+.category-buttons {
+  margin-bottom: 1em;
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em;
+  }
+
+  &__count {
+    font-weight: normal;
+    opacity: 0.75;
+    margin-left: 0.25em;
+    font-size: 0.85em;
+  }
+
+  .btn {
+    font-size: 0.75em;
+  }
+}
