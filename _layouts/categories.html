@@ -27,20 +27,130 @@ layout: archive
   {% endfor %}
 {% endfor %}
 
+<nav class="pagination js-pagination" style="display:none;">
+  <ul></ul>
+</nav>
+
 <script>
 (function() {
-  function filterByHash() {
+  var PER_PAGE = 5;
+  var currentPage = 1;
+
+  function run() {
     var hash = window.location.hash.substring(1);
     var sections = document.querySelectorAll('.taxonomy__section');
+    var paginationNav = document.querySelector('.js-pagination');
+
     if (!hash) {
       sections.forEach(function(s) { s.style.display = ''; });
+      paginationNav.style.display = 'none';
+      // hide pagination, show all sections as-is
+      sections.forEach(function(s) {
+        var items = s.querySelectorAll('.list__item');
+        items.forEach(function(item) { item.style.display = ''; });
+      });
       return;
     }
+
+    // Show only matched section
+    var activeSection = null;
     sections.forEach(function(s) {
-      s.style.display = (s.id === hash) ? '' : 'none';
+      if (s.id === hash) {
+        s.style.display = '';
+        activeSection = s;
+      } else {
+        s.style.display = 'none';
+      }
     });
+
+    if (!activeSection) return;
+
+    var items = activeSection.querySelectorAll('.list__item');
+    var totalItems = items.length;
+    var totalPages = Math.ceil(totalItems / PER_PAGE);
+
+    if (currentPage > totalPages) currentPage = 1;
+
+    // Show/hide items for current page
+    items.forEach(function(item, i) {
+      var page = Math.floor(i / PER_PAGE) + 1;
+      item.style.display = (page === currentPage) ? '' : 'none';
+    });
+
+    // Build pagination UI
+    if (totalPages <= 1) {
+      paginationNav.style.display = 'none';
+      return;
+    }
+
+    paginationNav.style.display = '';
+    var ul = paginationNav.querySelector('ul');
+    ul.innerHTML = '';
+
+    // Previous
+    var prevLi = document.createElement('li');
+    var prevA = document.createElement('a');
+    prevA.textContent = 'Previous';
+    if (currentPage === 1) {
+      prevA.href = '#';
+      prevA.className = 'disabled';
+    } else {
+      prevA.href = '#' + hash;
+      prevA.addEventListener('click', function(e) {
+        e.preventDefault();
+        currentPage--;
+        run();
+      });
+    }
+    prevLi.appendChild(prevA);
+    ul.appendChild(prevLi);
+
+    // Page numbers
+    for (var p = 1; p <= totalPages; p++) {
+      (function(page) {
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.textContent = page;
+        a.href = '#' + hash;
+        if (page === currentPage) {
+          a.className = 'disabled current';
+        } else {
+          a.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentPage = page;
+            run();
+            window.scrollTo(0, 0);
+          });
+        }
+        li.appendChild(a);
+        ul.appendChild(li);
+      })(p);
+    }
+
+    // Next
+    var nextLi = document.createElement('li');
+    var nextA = document.createElement('a');
+    nextA.textContent = 'Next';
+    if (currentPage === totalPages) {
+      nextA.href = '#';
+      nextA.className = 'disabled';
+    } else {
+      nextA.href = '#' + hash;
+      nextA.addEventListener('click', function(e) {
+        e.preventDefault();
+        currentPage++;
+        run();
+        window.scrollTo(0, 0);
+      });
+    }
+    nextLi.appendChild(nextA);
+    ul.appendChild(nextLi);
   }
-  filterByHash();
-  window.addEventListener('hashchange', filterByHash);
+
+  run();
+  window.addEventListener('hashchange', function() {
+    currentPage = 1;
+    run();
+  });
 })();
 </script>
