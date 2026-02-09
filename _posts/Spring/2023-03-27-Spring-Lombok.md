@@ -120,7 +120,7 @@ Lombok 사용을 위해서는 아래와 같은 추가 설정이 필요하다
 
 ```java
 error: cannot find symbol
-        Posts.builder().title(title).content(content).author("krails@gmail.com").build();
+        Posts.builder().title(title).content(content).author("user@example.com").build();
              ^
   symbol:   method builder()
   location: class org.example.domain.posts.Posts

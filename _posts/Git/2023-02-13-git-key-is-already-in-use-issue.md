@@ -24,8 +24,8 @@ ssh-keygen 명령어 수행 후 기존 키와의 중복 방지를 위해 *Enter 
 
 key를 생성하면 아래와 같이 private, public 키가 각각 생성되는데 이 중 public key를 사용하고자 하는 계정에 등록해주면 된다.
 ```
-$ ls  ~/.ssh/id_rsa_krails0105*
-/Users/shkim/.ssh/id_rsa_krails0105     /Users/shkim/.ssh/id_rsa_krails0105.pub
+$ ls  ~/.ssh/id_rsa_user_b*
+/Users/myuser/.ssh/id_rsa_user_b     /Users/myuser/.ssh/id_rsa_user_b.pub
 ```
 
 github 페이지에서 Settings -> SSH and GPG keys -> New SSH Key 
@@ -36,7 +36,7 @@ github 페이지에서 Settings -> SSH and GPG keys -> New SSH Key
 
 아래와 같이 cat 명령어를 이용하면 key의 내용을 볼 수 있는데 결과 텍스트를 그대로 전부 복사하여 넣으면 된다.
 ```
-$ cat /Users/shkim/.ssh/id_rsa_krails0105.pub
+$ cat /Users/myuser/.ssh/id_rsa_user_b.pub
 ```
 
 ![](..../../assets/images/23-03-13-git-key-duplicated/git-issue6.png)
@@ -53,8 +53,8 @@ $ cat /Users/shkim/.ssh/id_rsa_krails0105.pub
 
 
 ```
-git config --global user.name krails0522
-git config --global user.email shkim@gmail.com
+git config --global user.name user-a
+git config --global user.email user-a@example.com
 ```
 
 ![](..../../assets/images/23-03-13-git-key-duplicated/git-issue1.png)
@@ -64,8 +64,8 @@ git config --global user.email shkim@gmail.com
 이 경우에는 --local 인자를 이용하여 사용할 레포에 원하는 git user 설정을 설정을 해주면 된다.
 
 ```
-git config --local user.name krails0105
-git config --local user.email krails.kim@gmail.com
+git config --local user.name user-b
+git config --local user.email user-b@example.com
 ```
 
 2. git URL를 추가 계정에 맞게 설정을 해줘야 함
@@ -83,10 +83,10 @@ $ vi ~/.ssh/config
 ```
 
 ```shell 
-Host github.com-krailskim
+Host github.com-user-b-ssh
   HostName github.com
   User git
-  IdentityFile ~/.ssh/id_rsa_krailskim
+  IdentityFile ~/.ssh/id_rsa_user_b_ssh
 ```
 
 ssh config 파일에서 추가 생성한 ssh key 파일을 IdentityFile로 하는 새로운 host를 생성한다.
@@ -94,11 +94,11 @@ ssh config 파일에서 추가 생성한 ssh key 파일을 IdentityFile로 하�
 이제 git clone시 아래와 같이 host를 수정하면 clone 결과로 생성된 repo는 자동으로 새로운 ssh key와 연동된다
 
 ```
-git clone git@github.com-krailskim:krails0105/krails0105.github.io.git
+git clone git@github.com-user-b-ssh:user-b/user-b.github.io.git
 ```
 만약 위와 같은 설정을 해주지 않고 github에서 복사한 URL그대로 clone을 하면 clone은 성공하지만 push시에 아래와 같은 에러가  발생한다.
 ```
-ERROR: Permission to krails0105/krails0105.github.io.git denied to krails0522.
+ERROR: Permission to user-b/user-b.github.io.git denied to user-a.
 fatal: Could not read from remote repository.
 
 Please make sure you have the correct access rights
@@ -108,7 +108,7 @@ Please make sure you have the correct access rights
 이때, 아래와 같이 git remote을 이용하여 origin을 삭제 후 수정된 URL로 add하면 해결할 수 있다
 ```
 $ git remote remove origin
-$ git remote add origin git@github.com-krailskim:krails0105/krails0105.github.io.git
+$ git remote add origin git@github.com-user-b-ssh:user-b/user-b.github.io.git
 ```
 
 # Conclusion

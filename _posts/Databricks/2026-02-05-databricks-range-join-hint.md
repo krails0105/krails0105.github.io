@@ -93,10 +93,10 @@ Databricks 전용 힌트로, 비등가 조인을 **binning 기반 equi-join으�
 
 ```sql
 SELECT /*+ RANGE_JOIN(e, 1000) */ *
-FROM target_blocks t
-JOIN block_events e
-    ON e.event_block > t.base_snapshot
-    AND e.event_block <= t.block_height
+FROM target_table t
+JOIN event_data e
+    ON e.event_id > t.range_start
+    AND e.event_id <= t.range_end
 ```
 
 핵심: `BroadcastNestedLoopJoin` → `BroadcastHashJoin`(또는 `SortMergeJoin`)으로 전환.
@@ -108,12 +108,12 @@ SQL 외에 PySpark DataFrame API에서도 `.hint()`로 적용할 수 있습니�
 ```python
 # DataFrame API에서 RANGE_JOIN 힌트 사용
 result = (
-    target_blocks
+    target_table
     .join(
-        block_events.hint("range_join", 1000),  # 힌트를 조인할 DataFrame에 적용
+        event_data.hint("range_join", 1000),  # 힌트를 조인할 DataFrame에 적용
         on=[
-            block_events.event_block > target_blocks.base_snapshot,
-            block_events.event_block <= target_blocks.block_height
+            event_data.event_id > target_table.range_start,
+            event_data.event_id <= target_table.range_end
         ]
     )
 )
@@ -142,13 +142,13 @@ bin_size = 1000일 때:
 범위 조건을 bin 기반 equi-join으로 변환합니다:
 
 ```text
-원래 조건: e.event_block > 50000 AND e.event_block <= 59999
+원래 조건: e.event_id > 50000 AND e.event_id <= 59999
 
 bin_size = 1000일 때:
-  event_block 50001~50999 → bin 50
-  event_block 51000~51999 → bin 51
+  event_id 50001~50999 → bin 50
+  event_id 51000~51999 → bin 51
   ...
-  event_block 59000~59999 → bin 59
+  event_id 59000~59999 → bin 59
 
 → 이 target은 bin 50~59에 매칭
 → bin이 같은 행끼리만 비교하면 됨!
@@ -239,10 +239,10 @@ DECIMAL:    동일한 precision/scale이어야 함
 ## 함정 1: 조인 키 타입 불일치
 
 ```sql
--- unspent_snapshot.snapshot_block: BIGINT
--- target_blocks.base_snapshot: INT (FLOOR 결과)
+-- snapshot_table.snapshot_key: BIGINT
+-- target_table.range_start: INT (FLOOR 결과)
 
-JOIN unspent_snapshot s ON s.snapshot_block = t.base_snapshot
+JOIN snapshot_table s ON s.snapshot_key = t.range_start
 ```
 
 RANGE_JOIN 힌트를 걸어도 **INT와 BIGINT가 섞이면 힌트가 무시**됩니다.
@@ -254,9 +254,9 @@ RANGE_JOIN 힌트를 걸어도 **INT와 BIGINT가 섞이면 힌트가 무시**�
 해결:
 
 ```sql
-CAST(FLOOR(block_height / 10000) * 10000 AS BIGINT) AS base_snapshot
+CAST(FLOOR(range_end / 10000) * 10000 AS BIGINT) AS range_start
 -- 또는
-CAST(... AS INT) AS base_snapshot  -- 상대방 타입에 맞춤
+CAST(... AS INT) AS range_start  -- 상대방 타입에 맞춤
 ```
 
 **중요**: 힌트가 무시되어도 **에러가 나지 않습니다**. 플랜에서 직접 확인해야 합니다.

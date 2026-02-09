@@ -19,21 +19,21 @@ github page는 git에서 운영하는 서비스인 만큼 git에 대해 더 익�
 아래 new 버튼 클릭
 ![](../../assets/images/23-02-04-github-page/repo.png)
 repo 이름은 반드시 {username}.github.io과 동일하게 설정한다.
-아래 예시는 username은 Owner와 같은 krails0105이기 때문에 krails0105.github.io로 설정
+아래 예시는 username은 Owner와 같은 myuser이기 때문에 myuser.github.io로 설정
 ![](../../assets/images/23-02-04-github-page/repo1.png)
 
 ## 2. index.html 생성 
 레포가 생성되면 아래 상태가 되는데 여기서 index.html만 생성해도 바로 page가 생성된다. 아래 Add file -> Create new file을 클릭
 ![](../../assets/images/23-02-04-github-page/repo7.png)
 
-아래 krails0105.github.io/[  ] in main의 공란에 index.html을 채워 넣고 아무 텍스트(Hello world!)를 넣고 Commit new file을 선택
+아래 myuser.github.io/[  ] in main의 공란에 index.html을 채워 넣고 아무 텍스트(Hello world!)를 넣고 Commit new file을 선택
 ![](../../assets/images/23-02-04-github-page/repo4.png)
 
 아래처럼 index.html이 생성되는데 이제 페이지의 기본 구성은 완료되었기 때문에 바로 페이지 접근이 가능하다
 ![](../../assets/images/23-02-04-github-page/repo8.png)
 
 ## 3. page 접근
-이제 username.github.io(예시의 경우는 krails0105.github.io)로 해당 페이지를 접근할 수 있다!
+이제 username.github.io(예시의 경우는 myuser.github.io)로 해당 페이지를 접근할 수 있다!
 
 ![](../../assets/images/23-02-04-github-page/repo6.png)
 

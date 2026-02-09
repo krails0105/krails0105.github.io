@@ -139,7 +139,7 @@ news:
 logging:
   level:
     root: INFO
-    io.github.krails0105: DEBUG
+    io.github.myuser: DEBUG
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
 ```
@@ -318,7 +318,7 @@ SPRING_PROFILES_ACTIVE=prod ./gradlew bootRun
 # application-local.yml (개발용)
 logging:
   level:
-    io.github.krails0105: DEBUG
+    io.github.myuser: DEBUG
     org.hibernate.SQL: DEBUG
 
 spring:
@@ -330,7 +330,7 @@ spring:
 logging:
   level:
     root: WARN
-    io.github.krails0105: INFO
+    io.github.myuser: INFO
 
 spring:
   h2:
