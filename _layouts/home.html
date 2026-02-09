@@ -4,25 +4,6 @@ layout: archive
 
 {{ content }}
 
-<div class="category-buttons">
-  <h3 class="archive__subtitle">Categories</h3>
-  <div class="category-buttons__list">
-    {% assign categories_max = 0 %}
-    {% for category in site.categories %}
-      {% if category[1].size > categories_max %}
-        {% assign categories_max = category[1].size %}
-      {% endif %}
-    {% endfor %}
-    {% for i in (1..categories_max) reversed %}
-      {% for category in site.categories %}
-        {% if category[1].size == i %}
-          <a href="/categories/#{{ category[0] | slugify }}" class="btn btn--outline">{{ category[0] }} <span class="category-buttons__count">({{ category[1].size }})</span></a>
-        {% endif %}
-      {% endfor %}
-    {% endfor %}
-  </div>
-</div>
-
 <h3 class="archive__subtitle">{{ site.data.ui-text[site.locale].recent_posts | default: "Recent Posts" }}</h3>
 
 {% if paginator %}

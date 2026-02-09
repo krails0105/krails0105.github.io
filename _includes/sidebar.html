@@ -1,6 +1,24 @@
 {% if page.author_profile or layout.author_profile or page.sidebar %}
   <div class="sidebar sticky">
   {% if page.author_profile or layout.author_profile %}{% include author-profile.html %}{% endif %}
+  <nav class="sidebar-categories">
+    <h4 class="sidebar-categories__title">Categories</h4>
+    <ul class="sidebar-categories__list">
+      {% assign categories_max = 0 %}
+      {% for category in site.categories %}
+        {% if category[1].size > categories_max %}
+          {% assign categories_max = category[1].size %}
+        {% endif %}
+      {% endfor %}
+      {% for i in (1..categories_max) reversed %}
+        {% for category in site.categories %}
+          {% if category[1].size == i %}
+            <li><a href="/categories/#{{ category[0] | slugify }}">{{ category[0] }} <span>({{ category[1].size }})</span></a></li>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </ul>
+  </nav>
   {% if page.sidebar %}
     {% for s in page.sidebar %}
       {% if s.image %}

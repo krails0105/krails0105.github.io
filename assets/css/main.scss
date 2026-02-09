@@ -11,13 +11,62 @@ $max-width: 1440px;
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
 
-// Page title - reduce size
+// Page title - compact
 .page__title {
-  font-size: $type-size-3; // 1.563em → 25px (down from default h1)
+  font-size: $type-size-4; // ~20px
 }
 
-.archive .page__title {
-  font-size: $type-size-4; // archive/home page title even smaller
+// Reduce spacing
+.archive__subtitle {
+  margin: 0.8em 0 0.4em;
+  font-size: $type-size-6;
+}
+
+#main {
+  padding-top: 0;
+}
+
+.page__inner-wrap {
+  margin-top: 0.5em;
+}
+
+// Sidebar categories
+.sidebar-categories {
+  margin-top: 1em;
+  padding-top: 1em;
+  border-top: 1px solid $border-color;
+
+  &__title {
+    margin: 0 0 0.5em;
+    font-size: $type-size-6;
+    text-transform: uppercase;
+    color: $muted-text-color;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      margin-bottom: 0.25em;
+    }
+
+    a {
+      font-size: $type-size-6;
+      color: $text-color;
+      text-decoration: none;
+
+      &:hover {
+        color: $primary-color;
+      }
+
+      span {
+        color: $muted-text-color;
+        font-size: 0.9em;
+      }
+    }
+  }
 }
 
 // Hits counter in sidebar
@@ -29,37 +78,5 @@ $max-width: 1440px;
     max-width: 80px;
     height: auto;
     opacity: 0.6;
-  }
-}
-
-// Category buttons on homepage
-.category-buttons {
-  margin-bottom: 2em;
-
-  &__list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5em;
-  }
-
-  &__count {
-    font-weight: normal;
-    opacity: 0.6;
-    font-size: 0.85em;
-  }
-
-  .btn--outline {
-    border: 1px solid $primary-color;
-    background: transparent;
-    color: $primary-color;
-    font-size: 0.75em;
-    padding: 0.3em 0.8em;
-    border-radius: 1em;
-    text-decoration: none;
-
-    &:hover {
-      background: $primary-color;
-      color: #fff;
-    }
   }
 }
