@@ -63,12 +63,12 @@ A(3 rows) × B(4 rows) = 12 rows
 
 비등가 조인은 “키 하나로 딱 매칭”이 아니라 범위 조건 때문에 **여러 후보가 매칭**될 수 있습니다.
 
-예를 들어 `created_block_height <= t.block_height`는
+예를 들어 `created_at <= t.event_id`는
 - `t`가 커질수록 매칭되는 `created`가 계속 늘어납니다.
 
-또 `spent_block_height > t.block_height`는
-- “t 시점에 아직 안 쓴 UTXO”를 찾는 조건이라
-- t마다 살아있는 UTXO가 많으면 매칭이 급증합니다.
+또 `expired_at > t.event_id`는
+- "t 시점에 아직 유효한 레코드"를 찾는 조건이라
+- t마다 살아있는 레코드가 많으면 매칭이 급증합니다.
 
 그래서 range join에서는 아래가 필수입니다.
 
@@ -105,8 +105,8 @@ A(3 rows) × B(4 rows) = 12 rows
 예:
 
 ```sql
-u.created_block_height <= t.block_height
-AND (u.spent_block_height IS NULL OR u.spent_block_height > t.block_height)
+u.created_at <= t.event_id
+AND (u.expired_at IS NULL OR u.expired_at > t.event_id)
 ```
 
 - `=` 기반 equi-join이 아니라 `<=`, `>` 기반 조건이라
@@ -141,17 +141,17 @@ JOIN /*+ BROADCAST */ target_info t ON ...
 
 타겟 블록 범위가 `[min_h, max_h]`라면:
 
-- `created_block_height <= max_h`
-- `spent_block_height IS NULL OR spent_block_height >= min_h`
+- `created_at <= max_h`
+- `expired_at IS NULL OR expired_at >= min_h`
 
 처럼 **큰 테이블을 먼저 줄여**야 합니다.
 
 ```sql
 SELECT u.*
-FROM utxo_snapshot u
-CROSS JOIN (SELECT MIN(block_height) min_h, MAX(block_height) max_h FROM target_info) b
-WHERE u.created_block_height <= b.max_h
-  AND (u.spent_block_height IS NULL OR u.spent_block_height >= b.min_h)
+FROM source_table u
+CROSS JOIN (SELECT MIN(event_id) min_h, MAX(event_id) max_h FROM target_info) b
+WHERE u.created_at <= b.max_h
+  AND (u.expired_at IS NULL OR u.expired_at >= b.min_h)
 ```
 
 ## 5.3 target이 너무 크면 chunking(구간 분할)

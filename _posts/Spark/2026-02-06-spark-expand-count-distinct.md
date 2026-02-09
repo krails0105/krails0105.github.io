@@ -111,7 +111,7 @@ N개 (N≥2)             N배        N배
 ## 실제 영향
 
 ```text
-with_age_v: 45만 행 × 10K 블록 = ~45억 중간 행 (가정)
+joined_v: 45만 행 × 10K 그룹 = ~45억 중간 행 (가정)
 
 COUNT DISTINCT 3개:
   Expand 후: 45억 × 3 = ~135억 행
@@ -159,21 +159,21 @@ GROUP BY department
 ```sql
 -- Before: Expand 발생 (COUNT DISTINCT 3개 → 행 3배)
 SELECT
-    target_block,
-    COUNT(DISTINCT CASE WHEN price > cost THEN block_id END) AS profit_blocks,
-    COUNT(DISTINCT CASE WHEN price < cost THEN block_id END) AS loss_blocks,
-    COUNT(DISTINCT CASE WHEN price = cost THEN block_id END) AS same_blocks
-FROM pre_aggregated_data  -- block_id가 이미 unique
-GROUP BY target_block
+    group_id,
+    COUNT(DISTINCT CASE WHEN price > cost THEN item_id END) AS profit_items,
+    COUNT(DISTINCT CASE WHEN price < cost THEN item_id END) AS loss_items,
+    COUNT(DISTINCT CASE WHEN price = cost THEN item_id END) AS neutral_items
+FROM pre_aggregated_data  -- item_id가 이미 unique
+GROUP BY group_id
 
 -- After: Expand 없음 (행 1배)
 SELECT
-    target_block,
-    SUM(CASE WHEN price > cost THEN 1 ELSE 0 END) AS profit_blocks,
-    SUM(CASE WHEN price < cost THEN 1 ELSE 0 END) AS loss_blocks,
-    SUM(CASE WHEN price = cost THEN 1 ELSE 0 END) AS same_blocks
+    group_id,
+    SUM(CASE WHEN price > cost THEN 1 ELSE 0 END) AS profit_items,
+    SUM(CASE WHEN price < cost THEN 1 ELSE 0 END) AS loss_items,
+    SUM(CASE WHEN price = cost THEN 1 ELSE 0 END) AS neutral_items
 FROM pre_aggregated_data
-GROUP BY target_block
+GROUP BY group_id
 ```
 
 **데이터가 이미 unique하면 DISTINCT가 제거할 중복이 없으므로**, 단순 조건 카운트와 결과가 동일합니다.

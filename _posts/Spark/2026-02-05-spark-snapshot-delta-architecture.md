@@ -21,11 +21,11 @@ tags:
 ---
 
 ```sql
-FROM utxo_snapshot u              -- 1.5억 행
-JOIN target_blocks t              -- N개 블록
-    ON u.created_block_height <= t.block_height
-   AND (u.spent_block_height IS NULL
-        OR u.spent_block_height > t.block_height)
+FROM source_table u              -- 1.5억 행
+JOIN target_table t              -- N개 블록
+    ON u.created_at <= t.event_id
+   AND (u.expired_at IS NULL
+        OR u.expired_at > t.event_id)
 ```
 
 - 등가 조인(`=`)이 아니라 범위 조건 → HashJoin 불가
@@ -44,7 +44,7 @@ JOIN target_blocks t              -- N개 블록
 ```
 
 이렇게 하면:
-- 스냅샷 조인: equi-join (`snapshot_block = base_snapshot`) → **HashJoin 가능**
+- 스냅샷 조인: equi-join (`snapshot_key = base_key`) → **HashJoin 가능**
 - 델타 조인: 범위가 최대 10,000블록으로 제한 → **RANGE_JOIN 힌트로 최적화 가능**
 
 ## 조인 종류의 변화
@@ -64,8 +64,8 @@ JOIN target_blocks t              -- N개 블록
 ```python
 SNAPSHOT_INTERVAL = 10000
 
-# base_snapshot 계산
-base_snapshot = FLOOR(block_height / 10000) * 10000
+# base_key 계산
+base_key = FLOOR(event_id / 10000) * 10000
 ```
 
 ```text
@@ -74,8 +74,8 @@ base_snapshot = FLOOR(block_height / 10000) * 10000
 ```
 
 만약 배치가 `[5000~14999]`처럼 스냅샷 경계를 걸치면:
-- 블록 5000~9999: base_snapshot=0, 델타 최대 9,999블록
-- 블록 10000~14999: base_snapshot=10000, 델타 최대 4,999블록
+- 블록 5000~9999: base_key=0, 델타 최대 9,999블록
+- 블록 10000~14999: base_key=10000, 델타 최대 4,999블록
 - 이건 동작하지만, **한 배치 내에서 2개 스냅샷을 참조**해야 해서 비효율적
 
 경계를 맞추면 **한 배치 = 한 스냅샷 + 최대 9,999 델타**로 깔끔합니다.
@@ -89,20 +89,20 @@ base_snapshot = FLOOR(block_height / 10000) * 10000
 ```sql
 -- (A) 스냅샷에 존재하는 블록: snapshot + delta
 SELECT
-    s.unspent_value + COALESCE(d.delta_value, 0) AS unspent_value
+    s.amount + COALESCE(d.delta_amount, 0) AS amount
 FROM snapshot_state s
-LEFT JOIN delta_events d USING (target_block, created_block_height)
-WHERE s.unspent_value + COALESCE(d.delta_value, 0) > 0
+LEFT JOIN delta_data d USING (target_id, created_at)
+WHERE s.amount + COALESCE(d.delta_amount, 0) > 0
 
 UNION ALL
 
 -- (B) 스냅샷 이후 새로 생성된 블록: delta만
 SELECT
-    SUM(e.delta_value) AS unspent_value
-FROM block_events e
-WHERE e.created_block_height > base_snapshot  -- 신규 블록
+    SUM(e.delta_amount) AS amount
+FROM event_data e
+WHERE e.created_at > base_key  -- 신규 블록
 GROUP BY ...
-HAVING SUM(e.delta_value) > 0
+HAVING SUM(e.delta_amount) > 0
 ```
 
 **왜 분리하는가?**
@@ -129,13 +129,13 @@ HAVING SUM(e.delta_value) > 0
 ---
 
 ```sql
-HAVING SUM(e.delta_value) > 0
+HAVING SUM(e.delta_amount) > 0
 ```
 
-`delta_value`는 생성이면 `+`, 소비면 `-`입니다.
-누적합이 0 이하면 **완전히 소비된 블록**이므로 결과에서 제외합니다.
+`delta_amount`는 추가면 `+`, 제거면 `-`입니다.
+누적합이 0 이하면 **완전히 제거된 레코드**이므로 결과에서 제외합니다.
 
-이 필터가 없으면 "잔액 0인 생성블록"까지 포함되어 불필요한 행이 증가합니다.
+이 필터가 없으면 "합계 0인 레코드"까지 포함되어 불필요한 행이 증가합니다.
 
 # 7. 이 패턴이 적용 가능한 조건
 

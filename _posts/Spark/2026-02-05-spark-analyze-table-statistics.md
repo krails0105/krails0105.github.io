@@ -56,9 +56,9 @@ EXPLAIN 결과에서 이런 표시가 보일 수 있습니다:
 
 ```text
 == Optimized Logical Plan ==
-Aggregate [block_height], [block_height, sum(value)]
-+- Filter (block_height <= 800000)
-   +- Relation spark_catalog.default.utxo_snapshot
+Aggregate [event_id], [event_id, sum(value)]
++- Filter (event_id <= 800000)
+   +- Relation spark_catalog.default.source_table
       [Statistics(sizeInBytes=12.5 GiB, isPartial)]
 ```
 

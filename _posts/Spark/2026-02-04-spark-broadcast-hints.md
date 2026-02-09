@@ -96,9 +96,9 @@ JOIN /*+ BROADCAST */ small_table s
 ## 해결 1) JOIN 뒤에 `/*+ BROADCAST */`를 붙이기 (권장)
 
 ```sql
-FROM utxo_stage u
+FROM source_data u
 JOIN /*+ BROADCAST */ target_info t
-  ON u.spent_block_height = t.block_height
+  ON u.expired_at = t.event_id
 ```
 
 ## 해결 2) SELECT 힌트는 “CTE 이름”으로 쓰기
@@ -106,7 +106,7 @@ JOIN /*+ BROADCAST */ target_info t
 ```sql
 SELECT /*+ BROADCAST(target_info) */
   ...
-FROM utxo_stage u
+FROM source_data u
 JOIN target_info t
   ON ...
 ```

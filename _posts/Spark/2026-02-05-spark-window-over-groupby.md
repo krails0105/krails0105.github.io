@@ -41,30 +41,30 @@ SQL의 논리적 실행 순서를 이해하면 이 패턴이 왜 동작하는지
 ## 문제 상황
 
 ```text
-블록별(block_height) + 구간별(age_range) 집계를 한 뒤,
-각 구간의 spent_output이 해당 블록의 전체 spent 대비 몇 %인지 구하고 싶다.
+그룹별(group_id) + 카테고리별(category) 집계를 한 뒤,
+각 카테고리의 subtotal이 해당 그룹의 전체 합계 대비 몇 %인지 구하고 싶다.
 ```
 
 ## 서브쿼리 방식 (전통적)
 
 ```sql
 WITH agg AS (
-    SELECT block_height, age_range,
-           SUM(spent_value) AS spent_output
-    FROM spent_data
-    GROUP BY block_height, age_range
+    SELECT group_id, category,
+           SUM(amount) AS subtotal
+    FROM source_data
+    GROUP BY group_id, category
 ),
 totals AS (
-    SELECT block_height,
-           SUM(spent_output) AS total_spent
+    SELECT group_id,
+           SUM(subtotal) AS group_total
     FROM agg
-    GROUP BY block_height
+    GROUP BY group_id
 )
-SELECT a.block_height, a.age_range,
-       a.spent_output,
-       a.spent_output / t.total_spent * 100 AS spent_percent
+SELECT a.group_id, a.category,
+       a.subtotal,
+       a.subtotal / t.group_total * 100 AS pct
 FROM agg a
-JOIN totals t ON a.block_height = t.block_height;
+JOIN totals t ON a.group_id = t.group_id;
 ```
 
 CTE 2개 + JOIN이 필요합니다.
@@ -72,13 +72,13 @@ CTE 2개 + JOIN이 필요합니다.
 ## Window 함수 방식
 
 ```sql
-SELECT block_height, age_range,
-       SUM(spent_value) AS spent_output,
-       SUM(spent_value)
-           / SUM(SUM(spent_value)) OVER (PARTITION BY block_height)
-           * 100 AS spent_percent
-FROM spent_data
-GROUP BY block_height, age_range;
+SELECT group_id, category,
+       SUM(amount) AS subtotal,
+       SUM(amount)
+           / SUM(SUM(amount)) OVER (PARTITION BY group_id)
+           * 100 AS pct
+FROM source_data
+GROUP BY group_id, category;
 ```
 
 한 번의 GROUP BY로 집계와 비율 계산을 동시에 수행합니다.
@@ -90,28 +90,28 @@ GROUP BY block_height, age_range;
 이 표현이 처음 보면 "SUM 안에 SUM?"이라고 혼란스러울 수 있습니다. 핵심은 **안쪽 SUM은 GROUP BY의 집계**이고, **바깥 SUM은 Window 함수**라는 점입니다. 분해해보면:
 
 ```text
-SUM(SUM(spent_value)) OVER (PARTITION BY block_height)
+SUM(SUM(amount)) OVER (PARTITION BY group_id)
 │   │                  │
 │   │                  └─ Window 함수: GROUP BY 결과 행에 대해 작동
 │   └─ 안쪽 SUM: GROUP BY 집계 (각 그룹의 합계)
-└─ 바깥 SUM: Window 함수 (같은 block_height 내 모든 그룹의 합계)
+└─ 바깥 SUM: Window 함수 (같은 group_id 내 모든 그룹의 합계)
 ```
 
 실행 흐름:
 
 ```text
-Step 1: GROUP BY block_height, age_range
-  → block_height=100, age_range='0d_1d', SUM(spent_value)=10
-  → block_height=100, age_range='1d_1w', SUM(spent_value)=30
-  → block_height=100, age_range='1w_1m', SUM(spent_value)=60
+Step 1: GROUP BY group_id, category
+  → group_id=100, category='cat_A', SUM(amount)=10
+  → group_id=100, category='cat_B', SUM(amount)=30
+  → group_id=100, category='cat_C', SUM(amount)=60
 
-Step 2: OVER (PARTITION BY block_height)
-  → block_height=100의 모든 행: SUM(10 + 30 + 60) = 100
+Step 2: OVER (PARTITION BY group_id)
+  → group_id=100의 모든 행: SUM(10 + 30 + 60) = 100
 
 Step 3: 나눗셈
-  → '0d_1d': 10 / 100 = 10%
-  → '1d_1w': 30 / 100 = 30%
-  → '1w_1m': 60 / 100 = 60%
+  → 'cat_A': 10 / 100 = 10%
+  → 'cat_B': 30 / 100 = 30%
+  → 'cat_C': 60 / 100 = 60%
 ```
 
 ## 다른 집계 함수도 가능
@@ -132,30 +132,30 @@ LEFT JOIN으로 가져온 값에 Window 함수를 적용할 때:
 
 ```sql
 SELECT
-    w.block_height,
-    w.age_range,
+    w.group_id,
+    w.category,
     SUM(w.value) AS supply,
-    -- LEFT JOIN으로 가져온 spent_output: 그룹 내 모두 같은 값
-    COALESCE(ANY_VALUE(s.spent_output), 0) AS spent_output,
-    -- Window: 블록 내 전체 spent 합계로 비율 계산
-    COALESCE(ANY_VALUE(s.spent_output), 0)
-        / NULLIF(SUM(COALESCE(ANY_VALUE(s.spent_output), 0))
-                 OVER (PARTITION BY w.block_height), 0) * 100
-        AS spent_percent
-FROM with_age_range w
-LEFT JOIN spent_agg s ON w.block_height = s.block_height
-                     AND w.age_range = s.age_range
-GROUP BY w.block_height, w.age_range
+    -- LEFT JOIN으로 가져온 subtotal: 그룹 내 모두 같은 값
+    COALESCE(ANY_VALUE(s.subtotal), 0) AS subtotal,
+    -- Window: 그룹 내 전체 합계로 비율 계산
+    COALESCE(ANY_VALUE(s.subtotal), 0)
+        / NULLIF(SUM(COALESCE(ANY_VALUE(s.subtotal), 0))
+                 OVER (PARTITION BY w.group_id), 0) * 100
+        AS pct
+FROM main_data w
+LEFT JOIN agg_data s ON w.group_id = s.group_id
+                     AND w.category = s.category
+GROUP BY w.group_id, w.category
 ```
 
 여기서의 실행 순서:
 
 ```text
 1. LEFT JOIN 수행
-2. GROUP BY block_height, age_range
-3. ANY_VALUE(s.spent_output) → 각 그룹에서 spent_output 값 추출
+2. GROUP BY group_id, category
+3. ANY_VALUE(s.subtotal) → 각 그룹에서 subtotal 값 추출
 4. COALESCE(..., 0) → NULL을 0으로
-5. SUM(...) OVER (PARTITION BY block_height) → 블록 내 합계
+5. SUM(...) OVER (PARTITION BY group_id) → 그룹 내 합계
 6. 나눗셈 → 비율
 ```
 
@@ -179,10 +179,10 @@ Window 방식:   GROUP BY → 같은 결과 위에서 Window 계산 (추가 스�
 Window 함수의 `PARTITION BY` 키가 GROUP BY 키에 포함되어 있으면 **추가 셔플이 발생하지 않을 수 있습니다** (Spark AQE가 최적화).
 
 ```text
-GROUP BY block_height, age_range
-OVER (PARTITION BY block_height)
+GROUP BY group_id, category
+OVER (PARTITION BY group_id)
 
-→ block_height로 이미 정렬/파티셔닝된 상태
+→ group_id로 이미 정렬/파티셔닝된 상태
 → 추가 셔플 불필요 (best case)
 ```
 
