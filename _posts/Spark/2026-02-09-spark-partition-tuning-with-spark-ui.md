@@ -12,7 +12,7 @@ tags:
 
 Spark 클러스터의 CPU 사용률이 10% 미만인데 작업이 느리다면, 노드를 더 추가하는 건 답이 아닙니다.
 
-이 글은 실제 UTXO 메트릭 계산 프로젝트에서 겪은 사례를 바탕으로, **Spark UI의 Executor/Stage/Task 탭을 읽고 파티션 문제를 진단하고 해결하는 과정**을 정리합니다.
+이 글은 실제 대규모 데이터 처리 프로젝트에서 겪은 사례를 바탕으로, **Spark UI의 Executor/Stage/Task 탭을 읽고 파티션 문제를 진단하고 해결하는 과정**을 정리합니다.
 
 # 1. 증상: CPU 10% 미만, Executor 대량 사망
 
@@ -67,7 +67,7 @@ Stage 7354의 Task 상세:
 
 핵심 관찰:
 
-1. **289 input records → 2.5B output records**: RANGE_JOIN으로 인한 레코드 폭발 (target_blocks 55K bins과 매칭)
+1. **289 input records → 2.5B output records**: RANGE_JOIN으로 인한 레코드 폭발 (lookup_table 55K bins과 매칭)
 2. **단일 task에서 94 GiB 메모리 스필**: Executor 메모리(23 GiB)의 4배. 디스크 I/O 폭탄
 3. **Task 2는 0.7초에 끝나는데 Task 0은 33분**: 극심한 스큐
 
@@ -118,7 +118,7 @@ Task 3: Input 27.5 MiB / 70 records,  Shuffle Read 364.3 KiB / 55,000 records
 
 **읽는 법:**
 - **Input**: 디스크(Parquet/Delta)에서 직접 스캔한 데이터 = **probe side** (이 stage의 소스 테이블)
-- **Shuffle Read**: 다른 stage에서 셔플로 받은 데이터 = **broadcast side** (여기선 target_blocks_v의 RANGE_JOIN bins)
+- **Shuffle Read**: 다른 stage에서 셔플로 받은 데이터 = **broadcast side** (여기선 lookup_v의 RANGE_JOIN bins)
 
 Input이 4개 task에 걸쳐 289 records뿐 → **이 소스 테이블의 Parquet 파일이 4개**라는 뜻입니다.
 
@@ -127,25 +127,25 @@ Input이 4개 task에 걸쳐 289 records뿐 → **이 소스 테이블의 Parque
 쿼리 플랜(Physical Plan)에서 이 stage가 스캔하는 테이블을 확인합니다:
 
 ```text
-(11) Scan parquet my_database.unspent_utxo_snapshot
-     PushedFilters: [IsNotNull(snapshot_block_height), ...]
+(11) Scan parquet my_database.snapshot_table
+     PushedFilters: [IsNotNull(partition_key), ...]
 ```
 
 그리고 Delta 테이블의 파일 수를 확인:
 
 ```sql
-DESCRIBE DETAIL my_database.unspent_utxo_snapshot;
+DESCRIBE DETAIL my_database.snapshot_table;
 -- numFiles: 15
 ```
 
-15개 파일 중 `snapshot_block_height = 220000` 필터에 매칭되는 파일이 **4개뿐**.
+15개 파일 중 `partition_key = 220000` 필터에 매칭되는 파일이 **4개뿐**.
 Delta의 data skipping(min/max 통계)이 나머지 11개를 건너뛰었습니다.
 
 ### Step 5: 연결 — 파일 수 → task 수 → 코어 미활용
 
 ```text
 Delta 테이블 15 files
-    → snapshot_block_height 필터 → data skipping → 4 files
+    → partition_key 필터 → data skipping → 4 files
     → Spark scan: 파일당 1 task → 4 tasks
     → 136코어 중 4개만 사용 → CPU 3%
     → 4 task에 전체 데이터 집중 → task당 94 GiB 스필
@@ -181,11 +181,11 @@ CPU < 10%
 Spark의 scan task 수 = **소스 데이터의 파일(파티션) 수**
 
 ```text
-utxo_events_block:      386 files
-unspent_utxo_snapshot:   15 files
+events_table:      386 files
+snapshot_table:   15 files
 ```
 
-`unspent_utxo_snapshot`에서 `snapshot_block_height = 220000` 필터 적용 시, CLUSTER BY (또는 Liquid Clustering)로 인해 **실제 데이터가 들어있는 파일이 4개뿐**. 나머지 11개 파일은 data skipping으로 건너뜀.
+`snapshot_table`에서 `partition_key = 220000` 필터 적용 시, CLUSTER BY (또는 Liquid Clustering)로 인해 **실제 데이터가 들어있는 파일이 4개뿐**. 나머지 11개 파일은 data skipping으로 건너뜀.
 
 ```text
 15 files → filter → 4 files touched → 4 scan tasks → 4/136 cores used = 3% CPU
@@ -235,61 +235,61 @@ SET spark.sql.adaptive.skewJoin.enabled = true;
 `repartition` 적용 전, 실제 파티션 수를 먼저 확인했습니다:
 
 ```text
-target_blocks_v: 59 partitions
-batch_utxo_v:     4 partitions  ← 문제의 원인
+lookup_v: 59 partitions
+batch_data_v:     4 partitions  ← 문제의 원인
 ```
 
-`batch_utxo_v`가 4 파티션 — Stage에서 본 4 tasks와 정확히 일치합니다.
+`batch_data_v`가 4 파티션 — Stage에서 본 4 tasks와 정확히 일치합니다.
 
 ## 적용 예시
 
 ```python
 # Before: 4 tasks (4 files after data skipping)
 snapshot_df = spark.sql(f"""
-    SELECT * FROM unspent_utxo_snapshot
-    WHERE snapshot_block_height = {base_snapshot}
+    SELECT * FROM snapshot_table
+    WHERE partition_key = {base_key}
 """)
 # log_partitions("snapshot", snapshot_df) → 4 partitions ← 이게 문제
 
 # After: 200 tasks (round robin)
 snapshot_df = spark.sql(f"""
-    SELECT * FROM unspent_utxo_snapshot
-    WHERE snapshot_block_height = {base_snapshot}
+    SELECT * FROM snapshot_table
+    WHERE partition_key = {base_key}
 """).repartition(200)
-snapshot_df.createOrReplaceTempView("unspent_utxo_snapshot_v")
+snapshot_df.createOrReplaceTempView("snapshot_v")
 snapshot_df.persist()
 ```
 
 ```python
-# batch_utxo_v도 동일하게
-batch_utxo_df = get_batch_utxo_events_block(base, end) \
+# batch_data_v도 동일하게
+batch_data_df = get_batch_data(base, end) \
     .repartition(200)
-batch_utxo_df.createOrReplaceTempView("batch_utxo_v")
-batch_utxo_df.persist()
+batch_data_df.createOrReplaceTempView("batch_data_v")
+batch_data_df.persist()
 ```
 
 ## 실측 결과 (20 nodes, repartition(200))
 
-Before: repartition 미적용 시 with_age_v의 action이 **1시간 이상 경과해도 완료되지 않음**.
+Before: repartition 미적용 시 joined_v의 action이 **1시간 이상 경과해도 완료되지 않음**.
 20개 노드를 띄워놔도 4개 task만 실행되어 **대부분의 노드가 유휴 상태** — 비용만 발생하고 성능 개선 없음.
 After: repartition(200) 적용 후 첫 배치 전체 결과:
 
 ```text
-target_blocks_v: 59 partitions   (0.3s)
-unspent_snapshot_v:              (0.4s)
-batch_utxo_v: 200 partitions     (1.0s)
-with_age_v: 280 partitions       (762.9s ≈ 12.7분)  ← 병목
-age_agg_v: 320 partitions        (59.4s)
-spent_age_v:                     (0.2s)
-A-1 block_metrics:               (109.9s ≈ 1.8분)
-A-2 age_dist:                    (295.2s ≈ 4.9분)   ← 두 번째 병목
-A-3 realized_age_dist:           (17.0s)
-A-4 count_age_dist:              (6.0s)
-A-5 spent_output_age:            (7.7s)
-A-6 realized_price_age:          (4.7s)
-A-7 sca_age_dist:                (5.1s)
+lookup_v: 59 partitions   (0.3s)
+snapshot_v:              (0.4s)
+batch_data_v: 200 partitions     (1.0s)
+joined_v: 280 partitions       (762.9s ≈ 12.7분)  ← 병목
+agg_v: 320 partitions        (59.4s)
+step3_v:                     (0.2s)
+A-1 metric_1:               (109.9s ≈ 1.8분)
+A-2 metric_2:                    (295.2s ≈ 4.9분)   ← 두 번째 병목
+A-3 metric_3:           (17.0s)
+A-4 metric_4:              (6.0s)
+A-5 metric_5:            (7.7s)
+A-6 metric_6:          (4.7s)
+A-7 metric_7:                (5.1s)
 ──────────────────────────────────────────────
-[ProcessA] 1/72  batch 1273s (21.2분)  ETA 1505.9분 (≈25시간)
+[MainProcess] 1/72  batch 1273s (21.2분)  ETA 1505.9분 (≈25시간)
 ```
 
 | 항목 | Before (4 partitions) | After (200 partitions) |
@@ -297,11 +297,11 @@ A-7 sca_age_dist:                (5.1s)
 | 코어 활용률 | 3% (4/136) | 100%+ (200/136) |
 | Task당 스필 | 94 GiB | ~1.9 GiB |
 | Executor 사망 | 빈번 (OOM 위험) | 안정 |
-| with_age_v | **1시간+ (미완료)** | **12.7분** |
+| joined_v | **1시간+ (미완료)** | **12.7분** |
 | 배치당 시간 | 측정 불가 (미완료) | 21.2분 |
 | 전체 ETA (72 batches) | - | ~25시간 |
 
-> `with_age_v`의 280 파티션과 `age_agg_v`의 320 파티션은 AQE가 셔플 이후 자동 결정한 값입니다.
+> `joined_v`의 280 파티션과 `agg_v`의 320 파티션은 AQE가 셔플 이후 자동 결정한 값입니다.
 
 ## 최종 실측 결과 (50 nodes, repartition(800))
 
@@ -329,12 +329,12 @@ repartition 없이 노드만 늘렸다면 여전히 4개 task에 몰리며 나�
 ### 이 프로젝트의 조인 구조
 
 ```text
-batch_utxo_v (probe side, 대형)
+batch_data_v (probe side, 대형)
   RANGE_JOIN
-target_blocks_v (build side, BROADCAST)
+lookup_v (build side, BROADCAST)
 ```
 
-`target_blocks_v`는 **BROADCAST**됩니다. 즉, 모든 executor에 전체 복사본이 전달되므로 probe side의 파티셔닝 키가 무엇이든 **셔플이 발생하지 않습니다**.
+`lookup_v`는 **BROADCAST**됩니다. 즉, 모든 executor에 전체 복사본이 전달되므로 probe side의 파티셔닝 키가 무엇이든 **셔플이 발생하지 않습니다**.
 
 ### Round Robin이 더 나은 이유
 
@@ -348,11 +348,11 @@ Round Robin은 행을 순서대로 0, 1, 2, ..., 199, 0, 1, ... 식으로 **순�
 
 ```python
 # ⚠️ 비권장 (이 패턴에서): 키로 repartition (Hash)
-df.repartition(200, "created_block_height")
+df.repartition(200, "sort_key")
 ```
 
-Hash 파티셔닝은 `hash(created_block_height) % 200`으로 파티션을 결정합니다.
-특정 `created_block_height` 값에 데이터가 편중되면 **파티션 간 크기 불균형(스큐)** 발생.
+Hash 파티셔닝은 `hash(sort_key) % 200`으로 파티션을 결정합니다.
+특정 `sort_key` 값에 데이터가 편중되면 **파티션 간 크기 불균형(스큐)** 발생.
 
 ### 판단 기준 정리
 
@@ -367,7 +367,7 @@ Hash 파티셔닝은 `hash(created_block_height) % 200`으로 파티션을 결�
 
 ## 함정: 모든 소스 테이블을 점검하라
 
-`batch_utxo_v`를 repartition(200)으로 수정 후 재실행했지만, **with_age_v 단계에서 다시 스큐가 발생**했습니다.
+`batch_data_v`를 repartition(200)으로 수정 후 재실행했지만, **joined_v 단계에서 다시 스큐가 발생**했습니다.
 
 ```text
 Stage Tasks: 15/15 (14 completed, 1 RUNNING)
@@ -378,35 +378,35 @@ Task 6 (SUCCESS):  Duration 3 s
 ...나머지 13개: 0.5~3초에 완료
 ```
 
-with_age_v는 두 테이블을 조인합니다:
-- `batch_utxo_v` — repartition(200) 적용 완료 ✅
-- `unspent_utxo_snapshot` — **repartition 미적용** ❌ ← 15 files, 1 file에 집중
+joined_v는 두 테이블을 조인합니다:
+- `batch_data_v` — repartition(200) 적용 완료 ✅
+- `snapshot_table` — **repartition 미적용** ❌ ← 15 files, 1 file에 집중
 
-**원인**: `unspent_utxo_snapshot`은 `CLUSTER BY (snapshot_block_height, created_block_height)`로 저장되어 있어, 특정 `snapshot_block_height` 필터 시 소수 파일만 히트. 그 파일 간에도 데이터 분포가 불균등.
+**원인**: `snapshot_table`은 `CLUSTER BY (partition_key, sort_key)`로 저장되어 있어, 특정 `partition_key` 필터 시 소수 파일만 히트. 그 파일 간에도 데이터 분포가 불균등.
 
 ### 해결: snapshot도 repartition
 
 ```python
-# target_blocks_v에서 필요한 snapshot만 동적 필터링 + repartition
+# lookup_v에서 필요한 snapshot만 동적 필터링 + repartition
 snapshot_df = spark.sql("""
     SELECT s.*
-    FROM unspent_utxo_snapshot s
-    WHERE s.snapshot_block_height IN (
-        SELECT DISTINCT base_snapshot FROM target_blocks_v
+    FROM snapshot_table s
+    WHERE s.partition_key IN (
+        SELECT DISTINCT base_key FROM lookup_v
     )
 """).repartition(800)
-snapshot_df.createOrReplaceTempView("unspent_utxo_snapshot_v")
+snapshot_df.createOrReplaceTempView("snapshot_v")
 snapshot_df.persist()
 ```
 
-with_age_v 쿼리에서 참조도 변경:
+joined_v 쿼리에서 참조도 변경:
 
 ```sql
 -- Before
-JOIN unspent_utxo_snapshot s ON s.snapshot_block_height = t.base_snapshot
+JOIN snapshot_table s ON s.partition_key = t.base_key
 
 -- After (repartitioned temp view 사용)
-JOIN unspent_utxo_snapshot_v s ON s.snapshot_block_height = t.base_snapshot
+JOIN snapshot_v s ON s.partition_key = t.base_key
 ```
 
 > **교훈**: repartition은 하나의 소스만 적용하면 안 됩니다. **조인에 참여하는 모든 대형 소스 테이블**의 파티션 수를 점검해야 합니다.
@@ -474,15 +474,15 @@ def log_partitions(name, df):
     print(f"  {name}: {n} partitions")
 
 # 사용
-log_partitions("target_blocks_v", target_blocks_df)
-# → target_blocks_v: 59 partitions  ← 충분
-log_partitions("batch_utxo_v", batch_utxo_df)
-# → batch_utxo_v: 4 partitions  ← 문제 발견!
+log_partitions("lookup_v", lookup_df)
+# → lookup_v: 59 partitions  ← 충분
+log_partitions("batch_data_v", batch_data_df)
+# → batch_data_v: 4 partitions  ← 문제 발견!
 
 # repartition 후
-batch_utxo_df = batch_utxo_df.repartition(200)
-log_partitions("batch_utxo_v", batch_utxo_df)
-# → batch_utxo_v: 200 partitions  ← 해결
+batch_data_df = batch_data_df.repartition(200)
+log_partitions("batch_data_v", batch_data_df)
+# → batch_data_v: 200 partitions  ← 해결
 ```
 
 ## 프로세스 전체에 로깅 적용
@@ -497,35 +497,35 @@ def log_partitions(name, df):
     print(f"  {name}: {n} partitions")
 
 # 각 단계마다 파티션 수 확인
-target_blocks_df = get_target_block(batch_start, batch_end, SNAPSHOT_INTERVAL)
-target_blocks_df.createOrReplaceTempView("target_blocks_v")
-target_blocks_df.persist()
-log_partitions("target_blocks_v", target_blocks_df)
+lookup_df = get_lookup_data(batch_start, batch_end, SNAPSHOT_INTERVAL)
+lookup_df.createOrReplaceTempView("lookup_v")
+lookup_df.persist()
+log_partitions("lookup_v", lookup_df)
 
 snapshot_df = spark.sql("""
-    SELECT s.* FROM unspent_utxo_snapshot s
-    WHERE s.snapshot_block_height IN (
-        SELECT DISTINCT base_snapshot FROM target_blocks_v)
+    SELECT s.* FROM snapshot_table s
+    WHERE s.partition_key IN (
+        SELECT DISTINCT base_key FROM lookup_v)
 """).repartition(REPART)
-snapshot_df.createOrReplaceTempView("unspent_utxo_snapshot_v")
+snapshot_df.createOrReplaceTempView("snapshot_v")
 snapshot_df.persist()
-log_partitions("unspent_utxo_snapshot_v", snapshot_df)
+log_partitions("snapshot_v", snapshot_df)
 
-batch_utxo_df = get_batch_utxo_events_block(batch_base, batch_end) \
+batch_data_df = get_batch_data(batch_base, batch_end) \
     .repartition(REPART)
-batch_utxo_df.createOrReplaceTempView("batch_utxo_v")
-batch_utxo_df.persist()
-log_partitions("batch_utxo_v", batch_utxo_df)
+batch_data_df.createOrReplaceTempView("batch_data_v")
+batch_data_df.persist()
+log_partitions("batch_data_v", batch_data_df)
 
-with_age_df = spark.sql(WITH_AGE_V_QUERY)
-with_age_df.persist(StorageLevel.DISK_ONLY)
-with_age_df.createOrReplaceTempView("with_age_v")
-log_partitions("with_age_v", with_age_df)
+joined_df = spark.sql(JOINED_V_QUERY)
+joined_df.persist(StorageLevel.DISK_ONLY)
+joined_df.createOrReplaceTempView("joined_v")
+log_partitions("joined_v", joined_df)
 
-age_agg_df = spark.sql(AGE_AGG_CACHE_SQL)
-age_agg_df.createOrReplaceTempView("age_agg_v")
-age_agg_df.persist()
-log_partitions("age_agg_v", age_agg_df)
+agg_df = spark.sql(AGG_CACHE_SQL)
+agg_df.createOrReplaceTempView("agg_v")
+agg_df.persist()
+log_partitions("agg_v", agg_df)
 ```
 
 > **Note**: `log_partitions`의 `distinct().count()`는 action이므로 `.persist()` 직후에 호출하면 캐시 빌드를 겸합니다.
@@ -628,7 +628,7 @@ Task 수 부족:
 ## 실전 사이징 예시
 
 ```text
-with_age_v (880GB DISK_ONLY) 기준:
+joined_v (880GB DISK_ONLY) 기준:
 
 20대 유지 → 파티션 튜닝으로 활용률 3% → 70%+ 개선
  ↓
