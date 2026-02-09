@@ -150,6 +150,15 @@ footer:
       # url:
 
 
+# After footer scripts (V2 features)
+after_footer_scripts:
+  - /assets/js/theme-toggle.js
+  - /assets/js/search-modal.js
+  - /assets/js/sidebar-drawer.js
+  - /assets/js/reading-progress.js
+  - /assets/js/code-copy.js
+  - /assets/js/heading-anchors.js
+
 # Reading Files
 include:
   - .htaccess

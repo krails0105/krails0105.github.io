@@ -2,4 +2,13 @@
 
 <!-- insert favicons. use https://realfavicongenerator.net/ -->
 
+<!-- Dark mode: FOUC prevention (must run before first paint) -->
+<script>
+(function(){
+  var s=localStorage.getItem('theme');
+  var d=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  if(s==='dark'||(!s&&d))document.documentElement.setAttribute('data-theme','dark');
+})();
+</script>
+
 <!-- end custom head snippets -->
