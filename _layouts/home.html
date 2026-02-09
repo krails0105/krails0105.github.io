@@ -16,7 +16,7 @@ layout: archive
     {% for i in (1..categories_max) reversed %}
       {% for category in site.categories %}
         {% if category[1].size == i %}
-          <a href="{{ site.category_archive.path | relative_url }}#{{ category[0] | slugify | downcase }}" class="btn btn--primary">{{ category[0] }} <span class="category-buttons__count">{{ category[1].size }}</span></a>
+          <a href="/categories/#{{ category[0] | slugify }}" class="btn btn--outline">{{ category[0] }} <span class="category-buttons__count">({{ category[1].size }})</span></a>
         {% endif %}
       {% endfor %}
     {% endfor %}

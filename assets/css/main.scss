@@ -10,22 +10,32 @@ search: false
 
 // Category buttons on homepage
 .category-buttons {
-  margin-bottom: 1em;
+  margin-bottom: 2em;
 
   &__list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4em;
+    gap: 0.5em;
   }
 
   &__count {
     font-weight: normal;
-    opacity: 0.75;
-    margin-left: 0.25em;
+    opacity: 0.6;
     font-size: 0.85em;
   }
 
-  .btn {
+  .btn--outline {
+    border: 1px solid $primary-color;
+    background: transparent;
+    color: $primary-color;
     font-size: 0.75em;
+    padding: 0.3em 0.8em;
+    border-radius: 1em;
+    text-decoration: none;
+
+    &:hover {
+      background: $primary-color;
+      color: #fff;
+    }
   }
 }
