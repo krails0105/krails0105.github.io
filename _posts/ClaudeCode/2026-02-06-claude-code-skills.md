@@ -20,7 +20,9 @@ Claude Code에서 같은 종류의 작업을 반복할 때마다 매번 상세�
 
 ## 개념
 
-Skill은 `SKILL.md` 파일에 정의된 **재사용 가능한 지시사항**입니다. Claude Code가 특정 작업을 수행할 때 따라야 할 절차, 규칙, 참고 자료를 묶어놓은 패키지입니다.
+Skill은 `SKILL.md` 파일에 정의된 **재사용 가능한 지시사항**입니다. Claude가 특정 작업을 수행할 때 따라야 할 절차, 규칙, 참고 자료를 묶어놓은 패키지입니다. 마치 신입 직원에게 업무 매뉴얼을 주어 일관되고 높은 품질의 결과물을 얻는 것과 유사합니다.
+
+Skill은 Claude Code뿐 아니라 **모든 Claude 제품**(Claude Desktop, Claude.ai 등)에서 사용 가능한 확장 메커니즘입니다. Custom Command나 Subagent가 Claude Code 전용인 것과 달리, Skill은 크로스 플랫폼으로 동작합니다.
 
 ```text
 일반 프롬프트:
@@ -40,20 +42,37 @@ Skill 사용:
 | **공유** | 복사/붙여넣기 | Git으로 팀 공유 |
 | **유지보수** | 산재된 프롬프트 | 한 파일에서 관리 |
 | **도구 제한** | 불가 | `allowed-tools`로 제한 가능 |
+| **조합 사용** | 불가 | 여러 Skill을 자동 조합하여 복합 작업 수행 가능 |
+
+## Composable (조합 가능)
+
+Skill의 중요한 특성 중 하나는 **여러 Skill을 자동으로 조합**하여 복잡한 작업을 완성할 수 있다는 것입니다. Claude가 작업에 필요한 Skill을 자동으로 파악하고 조합합니다.
+
+예를 들어 "워드 문서에 데이터 차트를 넣어줘"라고 요청하면, 문서 생성 스킬과 차트 생성 스킬을 자동으로 조합하여 사용합니다. 사용자가 어떤 Skill을 사용할지 지정하지 않아도 됩니다.
 
 # 2. Skill의 종류와 위치
 
 ---
 
+## Standalone vs Plugin
+
+Skill을 배치하는 방식은 크게 두 가지입니다.
+
+**Standalone** (`.claude/` 디렉토리): 개인 워크플로우, 프로젝트별 커스터마이징, 빠른 실험에 적합합니다. `/skill-name`으로 바로 호출됩니다.
+
+**Plugin** (`.claude-plugin/plugin.json`이 있는 디렉토리): 팀원과 공유, 커뮤니티 배포, 버전 관리가 필요할 때 사용합니다. `/plugin-name:skill-name`으로 네임스페이스가 붙어 호출됩니다.
+
+**개인 용도라면 Standalone으로 충분합니다.** Plugin은 marketplace 등록, plugin.json 매니페스트 등 배포를 위한 구조가 추가되므로, 혼자 쓸 스킬에는 과합니다.
+
 ## 스코프별 분류
 
 ```text
-사용자 스킬 (User Scope):
+사용자 스킬 (User Scope) [Standalone]:
   ~/.claude/skills/<skill-name>/SKILL.md
   → 모든 프로젝트에서 사용 가능
   → 개인 워크플로우 자동화
 
-프로젝트 스킬 (Project Scope):
+프로젝트 스킬 (Project Scope) [Standalone]:
   .claude/skills/<skill-name>/SKILL.md
   → 현재 프로젝트에서만 사용
   → Git에 포함 → 팀원과 공유
