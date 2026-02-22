@@ -1,3 +1,11 @@
+---
+title: "[Git] GitHub Page 구성 (1)"
+categories:
+  - Git
+tags:
+  - [Git, GitHub Pages, Jekyll]
+---
+
 # Introduction
 
 ---

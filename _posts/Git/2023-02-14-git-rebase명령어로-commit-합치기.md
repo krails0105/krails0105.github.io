@@ -1,3 +1,11 @@
+---
+title: "[Git] Rebase 명령어로 Commit 합치기"
+categories:
+  - Git
+tags:
+  - [Git, Rebase, Squash]
+---
+
 # Issue
 
 ---

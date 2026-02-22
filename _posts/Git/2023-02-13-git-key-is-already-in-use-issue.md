@@ -1,5 +1,9 @@
 ---
-title:  Git "Key is already in use" issue
+title: "[Git] Key is already in use Issue"
+categories:
+  - Git
+tags:
+  - [Git, SSH, Troubleshooting]
 ---
 
 # Issue
