@@ -2,7 +2,7 @@
 title: "[Bitcoin] UTXO 메트릭 Spark 파이프라인 -- 검증과 최적화에서 배운 것들"
 date: 2026-02-13
 categories:
-  - StockInfo
+  - Spark
 tags:
   - Bitcoin
   - Spark

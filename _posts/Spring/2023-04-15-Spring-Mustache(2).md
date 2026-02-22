@@ -1,7 +1,7 @@
 ---
 title: "[SpringBoot] 머스테치(Mustache) (2) - 부트스트랩, 제이쿼리 적용"
 categories:
-  - Spring, Mustache
+  - Spring
 tags:
   - [Java, Spring, Mustache]
 ---

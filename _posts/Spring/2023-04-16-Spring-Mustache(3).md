@@ -1,7 +1,7 @@
 ---
 title: "[SpringBoot] 머스테치(Mustache) (3) - 추가 기능 구성"
 categories:
-  - Spring, Mustache
+  - Spring
 tags:
   - [Java, Spring, Mustache]
 ---

@@ -1,7 +1,7 @@
 ---
 title: "[Spark] 복잡한 금융 메트릭 파이프라인의 CTE 레이어 분리 전략"
 categories:
-  - StockInfo
+  - Spark
 tags:
   - [Spark, SQL, CTE, Databricks, 리팩토링]
 ---

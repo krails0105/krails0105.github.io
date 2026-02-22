@@ -2,7 +2,7 @@
 title: "[Spark] 복잡한 금융 메트릭 파이프라인의 CTE 레이어 분리 전략"
 date: 2026-02-13
 categories:
-  - StockInfo
+  - Spark
 tags:
   - Spark
   - SQL

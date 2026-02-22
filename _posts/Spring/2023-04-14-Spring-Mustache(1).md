@@ -1,7 +1,7 @@
 ---
 title: "[SpringBoot] 머스테치(Mustache) (1) - 머스테치를 이용한 화면 구성"
 categories:
-  - Spring, Mustache
+  - Spring
 tags:
   - [Java, Spring, Mustache]
 ---

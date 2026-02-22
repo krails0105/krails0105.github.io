@@ -1,7 +1,7 @@
 ---
 title: "[StockInfo] Delta Lake MERGE 성능 최적화: 2.5B Rows 테이블 증분 업데이트 전략"
 categories:
-  - StockInfo
+  - Delta
 tags:
   - [Delta Lake, Spark, MERGE, Performance Optimization, Databricks, Liquid Clustering, AQE]
 ---
