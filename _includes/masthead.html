@@ -21,11 +21,11 @@
         {% if site.search == true %}
         <button class="search__toggle" type="button" id="search-modal-trigger">
           <span class="visually-hidden">{{ site.data.ui-text[site.locale].search_label | default: "Toggle search" }}</span>
-          <i class="fas fa-search"></i>
+          <i class="fas fa-search" aria-hidden="true"></i>
         </button>
         {% endif %}
         <button class="theme-toggle" type="button" aria-label="Toggle dark mode">
-          <i class="fas fa-moon"></i>
+          <i class="fas fa-moon" aria-hidden="true"></i>
         </button>
         <button class="greedy-nav__toggle hidden" type="button">
           <span class="visually-hidden">{{ site.data.ui-text[site.locale].menu_label | default: "Toggle menu" }}</span>

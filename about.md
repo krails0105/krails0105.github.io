@@ -5,24 +5,30 @@ permalink: /about/
 author_profile: true
 ---
 
-## Sanghyun Kim
+## Data Engineer, 4+ Years
 
-Data Engineer based in Seoul, building **Bitcoin on-chain data pipelines** on Databricks.
+CryptoQuant에서 대규모 데이터 파이프라인의 설계부터 운영까지 전 주기를 담당하고 있습니다. 파편화된 레거시 시스템을 Spark 기반으로 통합 재설계하여 처리 불가능했던 분석을 가능하게 만든 경험이 있으며, 현재 12개 이상의 데이터 소스에 걸친 ETL 파이프라인을 운영하고 있습니다.
 
-### Tech Stack
+---
 
-`Spark` `Databricks` `Delta Lake` `Airflow` `Kafka` `ClickHouse` `BigQuery` `Python` `SQL`
+### Experience
 
-### What I Write About
+**CryptoQuant** — Data Engineer <span style="color: #999; font-size: 0.85em;">2021.11 ~</span>
 
-이 블로그에는 실무에서 마주한 데이터 엔지니어링 문제들과 해결 과정을 기록합니다.
+- Spark/Databricks 기반 대규모 배치 파이프라인 단독 설계 및 구축
+- 멀티소스 실시간/배치 겸용 ETL 시스템 운영
+- Airflow 기반 워크플로우 오케스트레이션 (27+ DAG)
+- dbt 기반 데이터 웨어하우스 모델링 및 품질 관리
+- Kafka 스트리밍 아키텍처 PoC 설계 및 구현
 
-- **Spark & Databricks** — UTXO 증분 처리, 멀티태스크 잡 설계, Serverless 디버깅
-- **Delta Lake** — CDF 기반 증분 파이프라인, 스키마 진화, 테이블 재생성
-- **Pipeline Architecture** — ETL/ELT 설계, OLAP 서빙 레이어 교체, 비용 최적화
-- **Kafka & Streaming** — 실시간 파이프라인, 이벤트 기반 아키텍처
+---
 
-### Links
+### Tech
 
-- [GitHub](https://github.com/krails0105/)
-- [Email](mailto:krails.kim@gmail.com)
+**Core** &nbsp; `Spark` `Databricks` `Delta Lake` `Airflow` `Kafka` `dbt`
+
+**Storage** &nbsp; `BigQuery` `PostgreSQL` `S3` `ClickHouse` `Iceberg`
+
+**Infra** &nbsp; `Kubernetes` `ArgoCD` `Docker` `AWS`
+
+**Language** &nbsp; `Python` `SQL` `Scala`

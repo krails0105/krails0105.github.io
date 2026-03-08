@@ -21,4 +21,10 @@
   toggle.addEventListener('click', open);
   if (closeBtn) closeBtn.addEventListener('click', close);
   if (backdrop) backdrop.addEventListener('click', close);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && sidebar.classList.contains('sidebar--open')) {
+      close();
+    }
+  });
 })();

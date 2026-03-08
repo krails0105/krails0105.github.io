@@ -51,6 +51,22 @@
   font-size: $type-size-7;
 }
 
+.page__footer-hits {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 0.5em;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  img {
+    vertical-align: middle;
+  }
+}
+
 .page__footer-follow {
   ul {
     margin: 0;
