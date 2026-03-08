@@ -808,53 +808,17 @@ LEFT JOIN pivot_r r ON t.block_height = r.block_height
 
 B-3에서 realized_range를 `utxo_events_block`이 아닌 별도의 `spent_output_usd_block` 테이블에서 가져오는 이유: `utxo_events_block`의 `realized_range`는 **생성 시점 가격(created_price)** 기준이지만, B-3가 필요로 하는 것은 **현재 가격(current_price)** 기준 버케팅이다. 이벤트 테이블은 이미 개별 UTXO 금액이 집계되어 있어 current_price 기준으로 재버케팅이 불가능하므로, Phase 0.5에서 별도로 생성한 테이블을 사용한다.
 
-## 주의할 점 (Gotchas)
+## 주의할 점 (Gotchas) 요약
 
-### 1. Global temp view는 반드시 persist + createOrReplaceGlobalTempView 순서
+이 글 전반에서 설명한 핵심 주의사항을 한눈에 정리한다:
 
-```python
-# 잘못된 순서 (query plan만 남음 -> 다른 세션에서 실패)
-df.createOrReplaceGlobalTempView("my_view")
-
-# 올바른 순서 (데이터가 캐시된 후 view 등록)
-df.persist()
-df.createOrReplaceGlobalTempView("my_view")
-```
-
-persist()가 없으면 global temp view에는 query plan만 저장된다. 다른 세션에서 이 view를 읽을 때, plan이 참조하는 소스 temp view(`target_blocks_v`, `batch_utxo_v` 등)가 해당 세션에 존재하지 않아 `AnalysisException`이 발생한다.
-
-### 2. batch_utxo_v 하한은 exclusive(`>`) 필수
-
-```python
-# 잘못된 예 -- min_base_snapshot 블록이 스냅샷과 델타 양쪽에 이중 집계됨
-WHERE event_block_height BETWEEN {min_base_snapshot} AND {batch_end}
-
-# 올바른 예 -- 스냅샷에 이미 포함된 블록은 제외
-WHERE event_block_height > {min_base_snapshot}
-  AND event_block_height <= {batch_end}
-```
-
-`min_base_snapshot` 블록 자체는 이미 스냅샷에 반영된 상태다. `>=` 또는 `BETWEEN`을 사용하면 해당 블록의 이벤트가 이중 집계된다.
-
-### 3. PIVOT IN 절에 값을 명시하지 않으면 성능 저하
-
-```sql
--- 잘못된 예: Spark가 모든 distinct 값을 찾기 위해 데이터를 한 번 더 스캔
-PIVOT (MAX(val) FOR age_range)
-
--- 올바른 예: 값을 명시해 extra scan 제거
-PIVOT (MAX(val) FOR age_range IN ('0d_1d', '1d_1w', ..., '10y_inf'))
-```
-
-Spark의 Native PIVOT은 IN 절 값을 명시하면 `MAX(CASE WHEN ...)` 패턴과 동일한 실행 계획을 생성한다. 하지만 IN 절을 생략하면 모든 distinct 값을 수집하는 추가 스캔이 발생한다.
-
-### 4. replaceWhere는 연속 범위에만 적합
-
-`replaceWhere`는 Liquid Clustering의 data skipping과 결합해 predicate에 해당하는 파일만 교체한다. 하지만 predicate가 비연속적이거나 row 단위 UPDATE가 필요한 경우에는 적합하지 않다. 그런 경우 `MERGE` 문을 사용해야 한다.
-
-### 5. 멀티태스크 잡은 반드시 Shared Cluster에서 실행
-
-Global temp view는 SparkContext(클러스터) 레벨에서 공유된다. 멀티태스크 잡에서 각 태스크가 별도 클러스터를 사용하면 view가 격리되어 데이터 공유가 불가능하다. **Shared cluster** 설정이 필수다.
+| # | 주의사항 | 잘못된 예 | 올바른 방법 | 참고 섹션 |
+|---|---------|----------|------------|----------|
+| 1 | Global temp view는 **persist → createOrReplaceGlobalTempView** 순서 필수 | persist 없이 view만 등록 → 다른 세션에서 `AnalysisException` | `df.persist()` 후 `createOrReplaceGlobalTempView()` | 핵심 개념 |
+| 2 | batch_utxo_v 하한은 **exclusive(`>`)** 필수 | `BETWEEN` 사용 → 이중 집계 | `event_block_height > min_base_snapshot` | 구현 1: batch_utxo_v |
+| 3 | PIVOT IN 절에 **값을 명시적으로 나열** | IN 절 생략 → extra scan 발생 | `FOR age_range IN ('0d_1d', ...)` | 구현 3: A-2 예시 |
+| 4 | replaceWhere는 **연속 범위에만** 적합 | 비연속/row 단위 UPDATE → 실패 | 비연속 UPDATE는 `MERGE` 사용 | 핵심 개념 |
+| 5 | 멀티태스크 잡은 **Shared Cluster** 필수 | 태스크별 별도 클러스터 → view 격리 | Job 설정에서 Shared cluster 선택 | — |
 
 ## 요약
 

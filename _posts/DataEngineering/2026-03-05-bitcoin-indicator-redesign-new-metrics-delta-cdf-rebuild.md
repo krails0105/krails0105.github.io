@@ -54,8 +54,6 @@ Bitcoin on-chain ETL 파이프라인에서 `indicator_block` 테이블에 신규
 | `stock_to_flow` | `supply_total / supply_new` | Valuation |
 | `puell_multiple` | `blockreward_usd / AVG(blockreward_usd) OVER 1year` | Activity |
 
-<!-- TODO: sopr_ratio 공식 확인 — sth_sopr/lth_sopr vs lth_sopr/sth_sopr. API 서버 코드 기준으로 정확한 분자/분모 재검증 필요 -->
-
 ---
 
 ## 구현 1: 블록 레벨 지표 계산
