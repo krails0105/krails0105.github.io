@@ -16,11 +16,11 @@ minimal_mistakes_skin    : "air" # "default", "aqua", "contrast", "dark", "dirt"
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Shane's space"
+title                    : "Shane | Data Engineer"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
 name                     : "Sanghyun Kim"
-description              : "Hi this is Shane's blog."
+description              : "Data Engineer blog — Spark, Kafka, Airflow, Databricks, Delta Lake, and Bitcoin on-chain data pipeline engineering."
 url                      : "https://krails0105.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
 repository               : # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
@@ -105,7 +105,7 @@ analytics:
 author:
   name             : "Sanghyun Kim"
   avatar           : "/assets/images/shkim.png"# path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "Never fall behind"
+  bio              : "Building Bitcoin on-chain data pipelines with Spark, Databricks & Delta Lake"
   location         : "Seoul, Republic of Korea"
   links:
     - label: "Email"
