@@ -1,0 +1,178 @@
+---
+layout: archive
+---
+
+{{ content }}
+
+{% assign categories_max = 0 %}
+{% for category in site.categories %}
+  {% if category[1].size > categories_max %}
+    {% assign categories_max = category[1].size %}
+  {% endif %}
+{% endfor %}
+
+{% assign entries_layout = page.entries_layout | default: 'list' %}
+{% for i in (1..categories_max) reversed %}
+  {% for category in site.categories %}
+    {% if category[1].size == i %}
+      <section id="{{ category[0] | slugify | downcase }}" class="taxonomy__section">
+        <h2 class="archive__subtitle">{{ category[0] }}</h2>
+        <div class="entries-{{ entries_layout }}">
+          {% for post in category.last %}
+            {% include archive-single.html type=entries_layout %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+<nav class="pagination js-pagination" style="display:none;">
+  <ul></ul>
+</nav>
+
+<script>
+(function() {
+  var PER_PAGE = 5;
+  var currentPage = 1;
+
+  function run() {
+    var hash = window.location.hash.substring(1);
+    var sections = document.querySelectorAll('.taxonomy__section');
+    var paginationNav = document.querySelector('.js-pagination');
+
+    if (!hash) {
+      sections.forEach(function(s) { s.style.display = ''; });
+      paginationNav.style.display = 'none';
+      // hide pagination, show all sections as-is
+      sections.forEach(function(s) {
+        var items = s.querySelectorAll('.list__item');
+        items.forEach(function(item) { item.style.display = ''; });
+      });
+      return;
+    }
+
+    // Show only matched section
+    var activeSection = null;
+    sections.forEach(function(s) {
+      if (s.id === hash) {
+        s.style.display = '';
+        activeSection = s;
+      } else {
+        s.style.display = 'none';
+      }
+    });
+
+    if (!activeSection) return;
+
+    var items = activeSection.querySelectorAll('.list__item');
+    var totalItems = items.length;
+    var totalPages = Math.ceil(totalItems / PER_PAGE);
+
+    if (currentPage > totalPages) currentPage = 1;
+
+    // Show/hide items for current page
+    items.forEach(function(item, i) {
+      var page = Math.floor(i / PER_PAGE) + 1;
+      item.style.display = (page === currentPage) ? '' : 'none';
+    });
+
+    // Build pagination UI
+    if (totalPages <= 1) {
+      paginationNav.style.display = 'none';
+      return;
+    }
+
+    paginationNav.style.display = '';
+    var ul = paginationNav.querySelector('ul');
+    ul.innerHTML = '';
+
+    // Previous
+    var prevLi = document.createElement('li');
+    var prevA = document.createElement('a');
+    prevA.textContent = 'Previous';
+    if (currentPage === 1) {
+      prevA.href = '#';
+      prevA.className = 'disabled';
+    } else {
+      prevA.href = '#' + hash;
+      prevA.addEventListener('click', function(e) {
+        e.preventDefault();
+        currentPage--;
+        run();
+      });
+    }
+    prevLi.appendChild(prevA);
+    ul.appendChild(prevLi);
+
+    // Page numbers
+    for (var p = 1; p <= totalPages; p++) {
+      (function(page) {
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.textContent = page;
+        a.href = '#' + hash;
+        if (page === currentPage) {
+          a.className = 'disabled current';
+        } else {
+          a.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentPage = page;
+            run();
+            window.scrollTo(0, 0);
+          });
+        }
+        li.appendChild(a);
+        ul.appendChild(li);
+      })(p);
+    }
+
+    // Next
+    var nextLi = document.createElement('li');
+    var nextA = document.createElement('a');
+    nextA.textContent = 'Next';
+    if (currentPage === totalPages) {
+      nextA.href = '#';
+      nextA.className = 'disabled';
+    } else {
+      nextA.href = '#' + hash;
+      nextA.addEventListener('click', function(e) {
+        e.preventDefault();
+        currentPage++;
+        run();
+        window.scrollTo(0, 0);
+      });
+    }
+    nextLi.appendChild(nextA);
+    ul.appendChild(nextLi);
+  }
+
+  run();
+  window.addEventListener('hashchange', function() {
+    currentPage = 1;
+    run();
+  });
+
+  // 사이드바 카테고리 링크 클릭 시 직접 필터링 처리
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('.sidebar-categories__list a');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (!href) return;
+    var hashIndex = href.indexOf('#');
+    if (hashIndex === -1) return;
+
+    var newHash = href.substring(hashIndex + 1);
+    e.preventDefault();
+    currentPage = 1;
+
+    if (window.location.hash.substring(1) === newHash) {
+      // 같은 카테고리 재클릭 시 hashchange가 발생하지 않으므로 직접 실행
+      run();
+    } else {
+      window.location.hash = newHash;
+    }
+    window.scrollTo(0, 0);
+  });
+})();
+</script>
