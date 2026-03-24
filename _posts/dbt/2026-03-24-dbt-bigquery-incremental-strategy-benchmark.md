@@ -1,5 +1,5 @@
 ---
-title: "dbt BigQuery Incremental Strategy 벤치마크 - merge, insert_overwrite, copy_partitions, microbatch 실측 비교"
+title: "DBT BigQuery Incremental Strategy 벤치마크 - merge, insert_overwrite, copy_partitions, microbatch 실측 비교"
 categories: [dbt]
 tags: [dbt, BigQuery, incremental, benchmark, data-engineering, microbatch, copy-partitions]
 ---

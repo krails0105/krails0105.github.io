@@ -1,5 +1,5 @@
 ---
-title: "dbt Incremental 모델의 this 풀스캔 문제 - 슬롯 사용량 1000배 차이를 만드는 3가지 해결법"
+title: "DBT Incremental 모델의 this 풀스캔 문제 - 슬롯 사용량 1000배 차이를 만드는 3가지 해결법"
 categories: [dbt]
 tags: [dbt, BigQuery, incremental, optimization, data-engineering, merge, incremental_predicates]
 ---
