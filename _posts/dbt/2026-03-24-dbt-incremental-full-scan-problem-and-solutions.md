@@ -1,10 +1,11 @@
 ---
 layout: post
-title: "dbt Incremental 모델의 {{ this }} 풀스캔 문제 - 슬롯 사용량 1000배 차이를 만드는 3가지 해결법"
+title: "dbt Incremental 모델의 this 풀스캔 문제 - 슬롯 사용량 1000배 차이를 만드는 3가지 해결법"
 date: 2026-03-24
 categories: [dbt]
 tags: [dbt, BigQuery, incremental, optimization, data-engineering, merge, incremental_predicates]
 ---
+{% raw %}
 
 ## 들어가며
 
@@ -402,3 +403,4 @@ WHEN NOT MATCHED THEN INSERT ...
 - [dbt Incremental models overview](https://docs.getdbt.com/docs/build/incremental-models)
 - [BigQuery INFORMATION_SCHEMA.PARTITIONS](https://cloud.google.com/bigquery/docs/information-schema-partitions)
 - [Dune Analytics spellbook - get_merge_sql 오버라이드 예시](https://github.com/duneanalytics/spellbook/blob/a32ee32bcece9b5ec24f42b59e1d937d3f14fc86/dbt_macros/dune/incremental.sql)
+{% endraw %}

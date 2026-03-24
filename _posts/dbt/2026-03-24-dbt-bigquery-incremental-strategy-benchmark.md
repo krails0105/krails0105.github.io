@@ -5,6 +5,7 @@ date: 2026-03-24
 categories: [dbt]
 tags: [dbt, BigQuery, incremental, benchmark, data-engineering, microbatch, copy-partitions]
 ---
+{% raw %}
 
 ## 들어가며
 
@@ -265,3 +266,4 @@ dbt run --select my_model --event-time-start 2024-03-01 --event-time-end 2024-04
 - [dbt microbatch 공식 문서](https://docs.getdbt.com/docs/build/incremental-microbatch)
 - [BigQuery INFORMATION_SCHEMA.JOBS](https://cloud.google.com/bigquery/docs/information-schema-jobs)
 - [BigQuery Copy Jobs 가격 정책](https://cloud.google.com/bigquery/pricing#data_ingestion_pricing)
+{% endraw %}
