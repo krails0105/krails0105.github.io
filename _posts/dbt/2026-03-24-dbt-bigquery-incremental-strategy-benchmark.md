@@ -5,7 +5,6 @@ date: 2026-03-24
 categories: [dbt]
 tags: [dbt, BigQuery, incremental, benchmark, data-engineering, microbatch, copy-partitions]
 ---
-{% raw %}
 
 ## 들어가며
 
@@ -54,6 +53,7 @@ dbt가 보고하는 `bytes processed`는 일부 전략에서 실제 BigQuery 과
 
 각 전략의 핵심 설정 차이는 아래와 같다.
 
+{% raw %}
 ```sql
 -- 1. merge (BigQuery 기본값)
 -- unique_key를 지정하면 MERGE DML로 upsert 수행
@@ -97,6 +97,7 @@ dbt가 보고하는 `bytes processed`는 일부 전략에서 실제 BigQuery 과
     begin="2024-01-01"
 ) }}
 ```
+{% endraw %}
 
 ## 벤치마크 결과
 
@@ -183,10 +184,11 @@ sources:
           event_time: event_timestamp  # 이 설정이 없으면 매 배치마다 풀스캔
 ```
 
-### 2. microbatch -- Full Refresh 시 `{{ this }}` 참조 에러
+### 2. microbatch -- Full Refresh 시 `{% raw %}{{ this }}{% endraw %}` 참조 에러
 
-Full Refresh 시에는 타깃 테이블이 아직 존재하지 않기 때문에 `{{ this }}`를 참조하면 에러가 발생한다. 이는 microbatch에 한정된 문제는 아니지만, microbatch의 배치 실행 구조에서 특히 자주 마주친다. `is_incremental()` 가드로 감싸야 한다.
+Full Refresh 시에는 타깃 테이블이 아직 존재하지 않기 때문에 `{% raw %}{{ this }}{% endraw %}`를 참조하면 에러가 발생한다. 이는 microbatch에 한정된 문제는 아니지만, microbatch의 배치 실행 구조에서 특히 자주 마주친다. `is_incremental()` 가드로 감싸야 한다.
 
+{% raw %}
 ```sql
 -- 잘못된 방식: full refresh 시 테이블이 없어 에러 발생
 prev_accumulated AS (
@@ -196,14 +198,15 @@ prev_accumulated AS (
 )
 
 -- 올바른 방식: is_incremental()로 분기
-{% raw %}{% if is_incremental() %}{% endraw %}
+{% if is_incremental() %}
 prev_accumulated AS (
   SELECT last_value
   FROM {{ this }}
   ORDER BY datetime DESC LIMIT 1
 ),
-{% raw %}{% endif %}{% endraw %}
+{% endif %}
 ```
+{% endraw %}
 
 ### 3. microbatch -- 누적합(running total) 로직과 비호환
 
@@ -266,4 +269,3 @@ dbt run --select my_model --event-time-start 2024-03-01 --event-time-end 2024-04
 - [dbt microbatch 공식 문서](https://docs.getdbt.com/docs/build/incremental-microbatch)
 - [BigQuery INFORMATION_SCHEMA.JOBS](https://cloud.google.com/bigquery/docs/information-schema-jobs)
 - [BigQuery Copy Jobs 가격 정책](https://cloud.google.com/bigquery/pricing#data_ingestion_pricing)
-{% endraw %}
