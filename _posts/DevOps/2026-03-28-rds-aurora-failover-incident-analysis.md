@@ -1,10 +1,7 @@
 ---
-layout: single
 title: "RDS Aurora PostgreSQL Failover 장애 대응기: OOM 원인 분석부터 GitOps 핫픽스까지"
 categories: [DevOps]
 tags: [AWS, RDS, Aurora, PostgreSQL, Failover, ArgoCD, Airflow, Performance Insights, Kubernetes, ConfigMap, OOM, Incident Response]
-toc: true
-toc_sticky: true
 date: 2026-03-28
 ---
 
