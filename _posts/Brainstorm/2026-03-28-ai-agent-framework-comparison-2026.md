@@ -2,7 +2,7 @@
 layout: single
 title: "[AI] 2026 AI Agent 프레임워크 비교 - LangChain, LangGraph, Spring AI, CrewAI, LangChain4j"
 categories:
-  - Backend
+  - Brainstorm
 tags:
   - [AI, LangChain, LangGraph, Spring AI, CrewAI, LangChain4j, Agent Framework, Python, Java]
 toc: true
