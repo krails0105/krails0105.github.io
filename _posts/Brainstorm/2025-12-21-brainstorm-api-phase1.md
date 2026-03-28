@@ -1,6 +1,7 @@
 ---
 title: "[Brainstorm] Phase 1 - 도메인 설계부터 REST API 구현까지"
-categories: [Backend]
+categories:
+  - Brainstorm
 tags: [Spring Boot, JPA, REST API, Brainstorm, Lombok, 예외 처리]
 date: 2026-03-19
 ---
