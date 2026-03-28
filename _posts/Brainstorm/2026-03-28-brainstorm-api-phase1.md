@@ -1,7 +1,8 @@
 ---
 layout: post
 title: "[Brainstorm API] Phase 1 구현기 - JWT 인증부터 공유 링크까지"
-categories: [Brainstorm]
+categories:
+  - Brainstorm
 tags: [Spring Boot, JWT, Spring Security, JPA, REST API]
 date: 2026-03-28
 ---

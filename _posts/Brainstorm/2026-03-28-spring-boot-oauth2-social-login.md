@@ -1,6 +1,7 @@
 ---
 title: "[Spring Boot] OAuth2 소셜 로그인 구현 (구글/카카오/네이버)"
-categories: [Brainstorm]
+categories:
+  - Brainstorm
 tags: [Spring Boot, OAuth2, Spring Security, Google, Kakao, Naver, JWT, Brainstorm]
 date: 2026-03-28
 ---
