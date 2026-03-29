@@ -1,7 +1,7 @@
 ---
 title: "[Flink] 상태(State)와 Checkpoint 이해하기"
 categories:
-  - Streaming
+  - Flink
 tags: [Flink, State, Checkpoint, ExactlyOnce, RocksDB]
 ---
 
