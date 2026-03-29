@@ -1,6 +1,6 @@
 ---
 title: "StarRocks + Databricks UniForm: Iceberg Catalog으로 Incremental MV가 가능할까?"
-date: 2026-03-29
+date: 2026-03-30
 categories:
   - DataEngineering
 tags:
