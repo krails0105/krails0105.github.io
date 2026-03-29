@@ -1,7 +1,7 @@
 ---
 title: "[Pipeline Monitor] Flink + Kinesis EKS 배포 디버깅 전체 기록 — 에러 9개 해부"
 categories:
-  - Kafka
+  - Flink
 tags: [Flink, Kinesis, EKS, Kubernetes, Java, Kryo, FlinkOperator, AWS, Debugging, Pipeline, Monitoring]
 ---
 

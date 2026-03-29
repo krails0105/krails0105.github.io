@@ -1,7 +1,7 @@
 ---
 title: "[Kinesis] Amazon Kinesis Data Streams 핵심 개념 정리 - Kafka 경험자를 위한 가이드"
 categories:
-  - Kafka
+  - Streaming
 tags:
   - Kinesis
   - Kafka
