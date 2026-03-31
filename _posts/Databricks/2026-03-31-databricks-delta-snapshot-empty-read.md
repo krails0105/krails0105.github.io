@@ -1,6 +1,6 @@
 ---
 title: "[Databricks] Delta Table에 데이터가 있는데 빈 결과가 반환되는 문제 분석"
-date: 2026-03-24
+date: 2026-03-31
 categories: [Databricks]
 tags: [Databricks, Delta Lake, PySpark, Debugging, ETL, Multi-Task Job]
 ---
@@ -278,6 +278,192 @@ if snap_count == 0:
 
 ---
 
+## 후속 (2026-03-31): 진짜 원인은 temp view 서브쿼리였다
+
+### 한 줄 요약
+
+방어 코드가 엉뚱한 곳을 지키고 있었다. "창고(Delta 테이블)에서 물건을 못 찾는다"고 생각했는데, 실제로는 **"안내 데스크(temp view)가 잘못된 위치를 알려주고 있었다."**
+
+### 비유: 도서관에서 책 찾기
+
+이 문제를 도서관에 비유하면 이해하기 쉽다.
+
+```
+정상 동작:
+  사서(temp view)에게 물어봄: "940000번 책 어디있어요?"
+  → "3번 서가에 있어요"
+  → 3번 서가 가서 책 가져옴 → 성공
+
+우리한테 발생한 일:
+  사서(temp view)에게 물어봄: "940000번 책 어디있어요?"
+  → "그런 책 없는데요?"          ← 사서가 잘못된 답을 줌
+  → 책을 찾을 수 없으니 실패
+  → 근데 직접 3번 서가 가보면 책이 있음
+```
+
+첫 번째 대응에서는 "3번 서가의 목록(Delta metadata)이 잘못됐나?" 하고 서가 목록을 갱신(`REFRESH TABLE`)했다. 하지만 진짜 문제는 서가가 아니라 **사서가 엉뚱한 답을 하는 것**이었으니, 서가를 아무리 정리해도 소용이 없었다.
+
+최종 수정은 간단하다: **사서한테 물어보지 말고, 직접 메모해둔 위치로 가자.**
+
+```python
+# Before: 사서한테 물어보기 (간헐적으로 "없다"고 답함)
+WHERE key IN (SELECT value FROM temp_view)
+
+# After: 직접 메모한 값 사용 (항상 정확)
+values = dataframe.collect()   # → [940000]
+WHERE key IN (940000)
+```
+
+---
+
+### 방어 코드를 뚫고 재발
+
+03-31에 동일 에러가 다시 발생했다. 이번에는 방어 코드가 수집한 진단 로그가 결정적 단서를 제공했다:
+
+```
+  target_blocks_v: persisted (0.6s)
+  target_blocks: 1 rows
+  unspent_utxo_snapshot_v: persisted (0.1s)
+  unspent_snapshot: 0 rows
+
+[DIAG] === Snapshot empty — running diagnostics ===
+  [DIAG] num_files: 18, size_bytes: 736562684
+  [DIAG] max(snapshot_block_height) via DataFrame API: 940000
+  [DIAG] COUNT(*) WHERE snapshot_block_height=940000 via SQL: 828823
+  [DIAG] target base_snapshots: []          ← 핵심 단서
+  [DIAG] raw re-query (before REFRESH): 828823
+  [DIAG] REFRESH TABLE completed
+  [DIAG] count after REFRESH: 828823
+  unspent_snapshot after refresh: 0 rows    ← REFRESH 후에도 실패
+```
+
+### Delta 테이블은 정상이었다
+
+| 검증 항목 | 결과 | 비유 |
+|---|---|---|
+| `max(snapshot_block_height)` | 940000 (정상) | 서가 목록에 책 있음 |
+| `COUNT(*) WHERE` 직접 쿼리 | 828,823 rows (정상) | 서가 가서 직접 확인 -- 있음 |
+| `REFRESH TABLE` 후 `COUNT(*)` | 828,823 rows (정상) | 목록 갱신 후에도 있음 |
+| 서브쿼리 경유 재로드 | **0 rows (실패)** | **사서한테 물어보면 "없다"** |
+
+Delta 테이블(서가)에는 분명히 데이터가 있었다. 어떤 방식으로 직접 조회해도 정상이다. 문제는 **`REFRESH TABLE` 이후에도 여전히 0 rows**라는 점이었다. Delta metadata cache 오염이 원인이었다면 REFRESH로 복구돼야 한다.
+
+### 결정적 단서: `target base_snapshots: []`
+
+진단 로그의 핵심은 이 줄이다:
+
+```
+[DIAG] target base_snapshots: []
+```
+
+`target_blocks_df.count() = 1`(DataFrame 객체에 데이터 1건 있음)인데, `SELECT DISTINCT base_snapshot FROM target_blocks_v`(같은 데이터를 temp view SQL로 조회)가 빈 결과를 반환했다. **같은 데이터를 두 가지 방법으로 읽었는데, 한쪽만 실패**한 것이다.
+
+snapshot 테이블을 로드하는 서브쿼리:
+
+```sql
+WHERE snapshot_block_height IN (SELECT DISTINCT base_snapshot FROM target_blocks_v)
+```
+
+서브쿼리가 빈 결과를 반환하니 `IN ()`이 아무것도 매치하지 않아 0 rows가 된다. snapshot 테이블에 아무리 데이터가 있어도 소용없다. **문제는 Delta 테이블이 아니라 temp view였다.**
+
+### 왜 같은 데이터를 다르게 읽는가
+
+Spark에서 데이터를 읽는 경로는 크게 **두 가지**다:
+
+```
+경로 A: DataFrame 객체 → persist된 메모리에서 직접 읽기
+경로 B: spark.sql("SELECT ... FROM temp_view") → SQL query plan 생성 → 실행
+```
+
+```python
+# 경로 A — 항상 정상
+target_blocks_df.count()
+# → 1 (persist된 데이터를 직접 참조)
+
+# 경로 B — 간헐적 실패
+spark.sql("SELECT DISTINCT base_snapshot FROM target_blocks_v")
+# → [] (temp view를 경유한 SQL이 빈 결과 반환)
+```
+
+`cached_view()`는 DataFrame을 `persist()` + `foreachPartition()`으로 강제 materialize한 뒤 `createOrReplaceTempView()`로 등록한다. 정상적이라면 경로 A와 경로 B는 같은 persist된 데이터를 봐야 한다.
+
+하지만 multi-task Job에서 같은 SparkContext를 공유하면, 이전 task에서 등록했던 동일 이름의 view가 남아있을 수 있다. 이때 `createOrReplaceTempView`가 이전 view를 교체하면서 **persist된 cache와 view의 query plan 사이에 불일치**가 발생할 수 있다. 이것은 알려진 Spark 이슈([SPARK-33663](https://issues.apache.org/jira/browse/SPARK-33663))다.
+
+비유로 돌아가면: 사서(temp view)가 참조하는 장부(query plan)가 오래된 버전으로 남아있어서, 실제 서가(persist된 데이터)와 어긋나는 상태다.
+
+### 왜 `REFRESH TABLE`이 무력했는가
+
+`REFRESH TABLE`은 Delta Lake catalog 테이블의 metadata cache를 무효화하는 명령이다. 하지만 이번 문제는 Delta 테이블이 아니라 **temp view**에서 발생했다. 비유하면:
+
+```
+REFRESH TABLE = "서가 목록을 최신으로 갱신"
+실제 문제   = "사서의 장부가 오래됨"
+```
+
+서가 목록(Delta metadata)을 아무리 갱신해도, 사서(temp view)가 참조하는 장부(query plan)는 별개이므로 영향을 받지 않는다. [Databricks 공식 문서](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-aux-cache-refresh-table)에서도 `REFRESH TABLE`은 catalog table 전용이라고 명시하고 있다.
+
+### 최종 수정: 사서를 거치지 않기
+
+해결은 간단하다. 사서(temp view 서브쿼리)를 통하지 않고, DataFrame 객체에서 직접 값을 꺼내서(collect) SQL에 숫자로 넣는다:
+
+```python
+# DataFrame 객체에서 직접 collect (사서를 거치지 않음)
+base_snapshots = [r[0] for r in target_blocks_df.select("base_snapshot").distinct().collect()]
+base_snapshots_sql = ",".join(str(s) for s in base_snapshots)
+# → base_snapshots = [940000], base_snapshots_sql = "940000"
+
+# Before (취약): temp view 서브쿼리 경유 — 사서한테 물어보기
+def _load_unspent_snapshot():
+    return cached_view(unspent_utxo_snapshot_v, spark.sql(f"""
+        SELECT * FROM {utxo_unspent_snapshot}
+        WHERE snapshot_block_height IN (
+            SELECT DISTINCT base_snapshot FROM {target_blocks_v}  -- 간헐적 빈 결과
+        )
+    """))
+
+# After (안전): 리터럴 값 직접 전달 — 메모한 위치로 직접 가기
+def _load_unspent_snapshot():
+    return cached_view(unspent_utxo_snapshot_v, spark.sql(f"""
+        SELECT * FROM {utxo_unspent_snapshot}
+        WHERE snapshot_block_height IN ({base_snapshots_sql})  -- "940000"
+    """))
+```
+
+이 수정이 안전한 이유: `target_blocks_df.count() = 1`로 DataFrame 객체(경로 A)의 데이터는 정상 확인됨. `.select().distinct().collect()`도 경로 A를 타므로, 경로 B(temp view SQL)의 불일치 영향을 받지 않는다.
+
+### 관련 알려진 이슈
+
+이 현상은 단일 버그가 아니라, Spark/Databricks의 여러 알려진 메커니즘이 복합적으로 작용한 결과다:
+
+| 이슈 | 설명 | 관련도 |
+|---|---|---|
+| [SPARK-33663](https://issues.apache.org/jira/browse/SPARK-33663) | `createOrReplaceTempView`가 이전 cached plan을 uncache시킴. 새 view가 cache를 상속하지 못하고 lazy 재평가될 수 있음 | **직접 원인 후보** — `cached_view()` 패턴과 정확히 일치 |
+| [Databricks Community #118067](https://community.databricks.com/t5/data-engineering/dataframe-is-getting-empty-during-execution-of-daily-job-with/td-p/118067) | Databricks disk cache(DBIO)가 stale/empty 데이터를 서빙하는 간헐적 현상 | 동일 증상 보고 |
+| [delta-io/delta #999](https://github.com/delta-io/delta/issues/999) | Delta snapshot caching이 stale snapshot을 서빙 | 배경 메커니즘 |
+| [Databricks Docs: REFRESH TABLE](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-aux-cache-refresh-table) | `REFRESH TABLE`은 **catalog table 전용** — temp view에는 효과 없음 | 방어 코드 무력화 원인 |
+
+특히 SPARK-33663이 핵심이다. 우리 `cached_view()` 함수는 `createOrReplaceTempView()` → `persist()` → `foreachPartition()` 순서로 호출한다. 만약 동일한 view 이름이 이전 task에서 이미 등록되어 있었다면, `createOrReplaceTempView`가 이전 plan의 cache를 무효화하면서 새 view가 persist된 데이터를 참조하지 못하는 상태가 될 수 있다.
+
+이 분석에서 중요한 점: **단일 근본 원인을 확정하기보다는, temp view 서브쿼리라는 취약한 경로 자체를 제거**하는 것이 올바른 대응이었다. 어떤 메커니즘이 정확히 trigger됐는지와 무관하게, DataFrame API로 collect한 값을 리터럴로 전달하면 모든 경우에 안전하다.
+
+수정 범위는 3개 파일, 동일 패턴을 사용하는 모든 곳:
+
+| 파일 | 변경 |
+|---|---|
+| `utxo_stat_and_age_dist_block.ipynb` | `_load_unspent_snapshot()` 서브쿼리 → 리터럴 |
+| `utxo_supply_dist_block.ipynb` | supply/realized snapshot 로딩 4곳 → 리터럴 |
+| `utxo_insert_template.ipynb` | `build_distribution_view()`에 `base_snapshots_sql` 파라미터 추가 |
+
+### 교훈 추가
+
+**6. 진단 로그는 미래의 나를 위한 투자다.** 첫 번째 발생(03-17) 때 원인을 확정하지 못했지만, 진단 로그를 설계해두었기 때문에 두 번째 발생(03-31)에서 7일 만에 원인을 특정할 수 있었다. `target base_snapshots: []` 한 줄이 없었다면 여전히 Delta metadata cache를 의심하고 있었을 것이다.
+
+**7. 방어 코드가 실패하면, 방어 범위를 의심하라.** 처음에는 "창고(Delta 테이블)에 문제가 있다"고 가정하고 창고 목록 갱신(`REFRESH TABLE`)을 적용했다. 하지만 실제 문제는 한 단계 앞의 안내 데스크(temp view)에 있었다. 방어 코드를 뚫고 재발했다면, "무엇을 방어하고 있는가"부터 재검토해야 한다.
+
+**8. Spark에서 DataFrame 객체와 temp view SQL은 다른 경로를 탄다.** `df.count()`는 persist된 storage에서 직접 읽지만, `spark.sql("SELECT ... FROM temp_view")`는 별도의 query plan을 생성한다. Multi-task 환경에서 이 두 경로가 불일치할 수 있다. 신뢰할 수 있는 값이 필요하면 **DataFrame API로 collect한 뒤 SQL 리터럴로 전달**하는 것이 가장 안전하다.
+
+---
+
 ## Reference
 
 - [Delta Lake - DESCRIBE HISTORY](https://docs.delta.io/latest/delta-utility.html#describe-history)
@@ -285,3 +471,7 @@ if snap_count == 0:
 - [Databricks - Configure compute for jobs](https://docs.databricks.com/en/compute/configure.html#job-compute)
 - [Delta Lake - Data skipping](https://docs.databricks.com/en/delta/data-skipping.html)
 - [Databricks - Multi-task jobs](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
+- [SPARK-33663 - Fix misleading uncache behavior with createOrReplaceTempView](https://issues.apache.org/jira/browse/SPARK-33663)
+- [Databricks Community - Dataframe is getting empty during execution of daily job](https://community.databricks.com/t5/data-engineering/dataframe-is-getting-empty-during-execution-of-daily-job-with/td-p/118067)
+- [delta-io/delta #999 - Add ability to control snapshot caching](https://github.com/delta-io/delta/issues/999)
+- [Databricks Docs - REFRESH TABLE은 catalog table 전용](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-aux-cache-refresh-table)
