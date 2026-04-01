@@ -421,16 +421,76 @@ docs = retriever.invoke("재택근무 관련 아이디어")
 # → ["원격근무 생산성 향상 방법", ...] (의미적으로 유사한 문서 반환)
 ```
 
-주요 Vector DB:
+### Vector DB 비교
 
-| Vector DB | 특징 |
-|-----------|------|
-| Chroma | 로컬 개발용, 설치 간편 |
-| Pinecone | 클라우드 매니지드, 확장성 좋음 |
-| Weaviate | 오픈소스, 하이브리드 검색 지원 |
-| pgvector | PostgreSQL 확장, 기존 DB 활용 가능 |
+주요 Vector DB를 성능, 장단점, 적합한 환경 기준으로 비교한다.
 
-현재 brainstorm-ai에서는 대화 내역을 직접 프롬프트에 넣는 방식으로 충분하지만, 세션 데이터가 누적되면 RAG + Vector DB 도입을 검토할 수 있다.
+| Vector DB | 타입 | 언어 | 특징 | GitHub Stars |
+|-----------|------|------|------|-------------|
+| **FAISS** | 라이브러리 | C++/Python | Meta 개발, 원시 검색 속도 최강 | ~30k |
+| **Milvus** | 서버 | Go/C++ | 대규모(수십억 벡터) 처리, GPU 지원 | ~25k |
+| **Qdrant** | 서버 | Rust | 복잡한 메타데이터 필터링에 강점 | ~9k |
+| **Weaviate** | 서버 | Go | 지식 그래프 + 벡터 검색 결합, GraphQL 지원 | ~8k |
+| **Chroma** | 임베디드 | Python | 설치 1줄, 빠른 프로토타이핑 | ~6k |
+| **Pinecone** | 매니지드 | - | 완전 관리형 클라우드, 운영 부담 없음 | 비공개 |
+| **pgvector** | DB 확장 | C | PostgreSQL에 벡터 검색 추가 | ~4k |
+
+### 성능 특성
+
+| Vector DB | 쿼리 속도 | 대규모 확장성 | 메타데이터 필터링 |
+|-----------|----------|-------------|----------------|
+| FAISS | 최상 (라이브러리 직접 호출) | 수동 샤딩 필요 | 미지원 (별도 구현) |
+| Milvus | 상 (GPU 가속 가능) | 수십억 벡터 | 기본 지원 |
+| Qdrant | 상 | 수억 벡터 | 최강 (복합 필터) |
+| Pinecone | 상 | 자동 스케일링 | 지원 |
+| Weaviate | 중상 | 수억 벡터 | 지원 (GraphQL) |
+| Chroma | 중 (소규모 최적) | 수백만 벡터 | 기본 지원 |
+| pgvector | 중하 (소규모) | 수백만 벡터 | SQL로 자유롭게 |
+
+### 어떤 상황에서 뭘 선택하나?
+
+**프로토타이핑 / 사이드 프로젝트 → Chroma**
+
+```bash
+pip install chromadb
+```
+한 줄이면 설치 끝. 별도 서버 없이 Python 프로세스 안에서 동작한다. 데이터가 작고 빠르게 검증하고 싶을 때 최적. brainstorm-ai처럼 초기 단계에서 RAG를 실험해보기에 좋다.
+
+**이미 PostgreSQL을 쓰고 있다 → pgvector**
+
+```sql
+CREATE EXTENSION vector;
+ALTER TABLE ideas ADD COLUMN embedding vector(1536);
+```
+새 인프라를 추가하지 않고 기존 PostgreSQL에 벡터 검색을 붙인다. brainstorm-api가 이미 PostgreSQL을 쓰고 있으니, 별도 Vector DB 없이 확장할 수 있다. 단, 수백만 건 이상이면 성능이 부족하다.
+
+**운영 부담을 줄이고 싶다 → Pinecone**
+
+서버 관리, 스케일링, 백업을 전부 Pinecone이 해준다. 인프라 팀이 없는 소규모 조직에서 프로덕션 RAG를 빠르게 올릴 때 적합. 단, 비용이 발생하고 vendor lock-in이 있다.
+
+**복잡한 필터 조건이 필요하다 → Qdrant**
+
+"카테고리가 'AI'이고, 생성일이 최근 7일 이내이며, 좋아요가 5개 이상인 아이디어 중에서 유사한 것" 같은 복합 조건 검색에 강하다. Rust 기반이라 성능도 좋다.
+
+**대규모 + GPU 가속이 필요하다 → Milvus**
+
+수억~수십억 벡터를 다루는 엔터프라이즈 환경. 다양한 인덱스 타입(HNSW, IVF, PQ)을 지원하고 GPU 가속이 가능하다. 관리형 서비스인 Zilliz Cloud도 있다.
+
+**연구/실험 + 최대 성능 → FAISS**
+
+Meta가 만든 라이브러리. 서버가 아니라 C++ 라이브러리이므로 직접 코드에서 호출한다. 가장 빠른 원시 검색 속도를 제공하지만, 메타데이터 필터링이나 분산 처리는 직접 구현해야 한다.
+
+**의미 검색 + 구조적 관계 → Weaviate**
+
+벡터 검색과 지식 그래프를 결합한다. "이 아이디어의 관련 키워드를 찾고, 그 키워드의 상위 카테고리도 함께 조회" 같은 구조적 쿼리에 유리하다.
+
+### brainstorm-ai에 적용한다면?
+
+현재는 대화 내역을 직접 프롬프트에 넣는 방식으로 충분하다. 하지만 세션 데이터가 누적되면:
+
+1. **1단계**: pgvector — 이미 쓰는 PostgreSQL에 확장만 추가
+2. **2단계**: Chroma — 별도 벡터 검색이 필요해지면 가볍게 도입
+3. **3단계**: Qdrant/Milvus — 대규모 확장이 필요해지면 전환
 
 ## 정리
 
@@ -461,3 +521,6 @@ docs = retriever.invoke("재택근무 관련 아이디어")
 - [LangChain Anthropic 통합](https://python.langchain.com/docs/integrations/chat/anthropic/)
 - [Pydantic 공식 문서](https://docs.pydantic.dev/)
 - [uv 공식 문서](https://docs.astral.sh/uv/)
+- [Vector Database Comparison 2025](https://liquidmetal.ai/casesAndBlogs/vector-comparison/)
+- [Best Vector Databases in 2026](https://www.firecrawl.dev/blog/best-vector-databases)
+- [Top 9 Vector Databases (Shakudo)](https://www.shakudo.io/blog/top-9-vector-databases)
