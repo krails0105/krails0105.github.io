@@ -6,3 +6,44 @@
 })();
 </script>
 
+<script>
+// Mermaid 다이어그램 렌더링 로더
+// Rouge가 감싼 ```mermaid 코드블록을 <div class="mermaid">로 치환한 뒤
+// mermaid 블록이 존재하는 페이지에서만 CDN에서 스크립트를 지연 로드한다.
+(function() {
+  function convertBlocks() {
+    var blocks = document.querySelectorAll('.language-mermaid, pre > code.language-mermaid');
+    var converted = 0;
+    blocks.forEach(function(el) {
+      var container = el.classList.contains('language-mermaid') ? el : el.closest('pre');
+      if (!container || container.dataset.mermaidConverted === '1') return;
+      var code = el.tagName === 'CODE' ? el : el.querySelector('code') || el;
+      var div = document.createElement('div');
+      div.className = 'mermaid';
+      div.textContent = code.textContent.trim();
+      container.parentNode.replaceChild(div, container);
+      div.dataset.mermaidConverted = '1';
+      converted++;
+    });
+    return converted;
+  }
+
+  function init() {
+    if (convertBlocks() === 0) return;
+    var script = document.createElement('script');
+    script.type = 'module';
+    script.textContent =
+      "import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';" +
+      "var theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';" +
+      "mermaid.initialize({ startOnLoad: false, theme: theme, securityLevel: 'loose' });" +
+      "mermaid.run({ querySelector: '.mermaid' });";
+    document.head.appendChild(script);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
